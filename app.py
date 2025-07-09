@@ -147,7 +147,8 @@ if menu == "Billing":
 
 # (Finance Calculator, Customer History, and Customer Details sections continue below...)
 elif menu == "Finance Calculator":
-    st.header("🏦 Gold Loan Finance Calculator")
+    st.header("🏦 Finance Calculator")
+loan_type = st.selectbox("Select Loan Type", ["Gold", "Silver"])
 
     def calculate_total_months(start_date, end_date):
         full_months = (end_date.year - start_date.year) * 12 + end_date.month - start_date.month
@@ -163,7 +164,10 @@ elif menu == "Finance Calculator":
         return full_months + partial_month
 
     def get_interest_rate(amount):
+    if loan_type == "Gold":
         return 2 if amount >= 5000 else 3
+    elif loan_type == "Silver":
+        return 5
 
     def calculate_gold_loan(principal, start_date, end_date):
         total_months = calculate_total_months(start_date, end_date)
