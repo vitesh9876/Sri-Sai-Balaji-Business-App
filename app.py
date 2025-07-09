@@ -215,7 +215,8 @@ elif menu == "Finance Calculator":
     if st.session_state.loan_done:
         st.success("✅ Calculation Complete!")
         st.markdown(f"""
-        ### 📊 Loan Summary
+        ### 📊 Loan Summary 
+        - 🔗 **Loan Type:** {st.session_state.loan_type}
         - 🗕️ **Months Charged:** {st.session_state.months}
         - 💰 **Interest:** ₹{st.session_state.interest}
         - 📜 **Total Payable:** ₹{st.session_state.payable}
