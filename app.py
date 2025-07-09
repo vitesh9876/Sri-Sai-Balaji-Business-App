@@ -150,10 +150,17 @@ elif menu == "Finance Calculator":
     st.header("🏦 Gold Loan Finance Calculator")
 
     def calculate_total_months(start_date, end_date):
-        months = (end_date.year - start_date.year) * 12 + end_date.month - start_date.month + 1
-        if end_date.day <= 10:
-            months -= 1
-        return months
+        full_months = (end_date.year - start_date.year) * 12 + end_date.month - start_date.month
+
+        # Adjust the last month
+        if 8 <= end_date.day <= 15:
+            partial_month = 0.5
+        elif end_date.day > 15:
+            partial_month = 1
+        else:  # end_date.day <= 7
+            partial_month = 0
+
+        return full_months + partial_month
 
     def get_interest_rate(amount):
         return 2 if amount >= 5000 else 3
