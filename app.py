@@ -209,7 +209,8 @@ elif menu == "Finance Calculator":
                 st.session_state.end_date = end_date
                 st.session_state.months = months
                 st.session_state.interest = interest
-                st.session_state.payable = payable
+                st.session_state.payable = payable 
+                st.session_state.loan_type = loan_type
                 st.rerun()
 
     if st.session_state.loan_done:
