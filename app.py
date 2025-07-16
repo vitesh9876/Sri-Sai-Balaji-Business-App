@@ -153,9 +153,9 @@ elif menu == "Finance Calculator":
     # Loan type selection inside the block
     loan_type = st.selectbox("Select Loan Type", ["Gold", "Silver"])
 
-    def calculate_total_custom_months(start_date: date, end_date: date) -> float:
-    if end_date <= start_date:
-        return 0.0
+def calculate_total_custom_months(start_date: date, end_date: date) -> float:
+if end_date <= start_date:
+return 0.0
 
     full_months = (end_date.year - start_date.year) * 12 + (end_date.month - start_date.month)
 
