@@ -197,7 +197,7 @@ def calculate_interest(principal, start_date, end_date, loan_type):
     if not st.session_state.loan_done:
         with st.form("loan_form"):
             st.subheader("💰 Loan Details")
-            amount = st.number_input("Loan Amount (₹)", min_value=100.0, step=100.0)
+            amount = st.number_input("Loan Amount (₹)", min_value=, step=)
             start_date = st.date_input("Loan Taken Date", value=date.today())
             end_date = st.date_input("Loan Release Date", value=date.today())
             calculate = st.form_submit_button("Calculate")
