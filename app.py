@@ -154,29 +154,31 @@ elif menu == "Finance Calculator":
     loan_type = st.selectbox("Select Loan Type", ["Gold", "Silver"])
 
     def calculate_total_custom_months(start_date: date, end_date: date) -> float:
-    # Step 1: Get number of full months
+    if end_date <= start_date:
+        return 0.0
+
     full_months = (end_date.year - start_date.year) * 12 + (end_date.month - start_date.month)
 
-    # Calculate anchor day (same day in end month)
-    anchor_day = start_date.day
-    anchor_month_date = start_date + relativedelta(months=full_months)
-    
-    if end_date >= anchor_month_date:
+    try:
+        anchor_date = start_date + relativedelta(months=full_months)
+    except ValueError:
+        anchor_date = (start_date.replace(day=1) + relativedelta(months=full_months + 1)) - relativedelta(days=1)
+
+    if end_date >= anchor_date:
+        extra_days = (end_date - anchor_date).days
         full_months += 1
-        extra_days = (end_date - anchor_month_date).days
     else:
-        extra_days = (end_date - (anchor_month_date - relativedelta(months=1))).days
-        full_months -= 1  # Because end date is before anchor
+        prev_anchor = start_date + relativedelta(months=full_months - 1)
+        extra_days = (end_date - prev_anchor).days
 
-    # Step 2: Adjust based on extra days
     if extra_days <= 7:
-        extra = 0
+        partial_month = 0
     elif 8 <= extra_days <= 15:
-        extra = 0.5
+        partial_month = 0.5
     else:
-        extra = 1
+        partial_month = 1
 
-    return full_months + extra
+    return full_months - 1 + partial_month
 
 
     def get_interest_rate(amount, loan_type):
@@ -188,11 +190,11 @@ elif menu == "Finance Calculator":
         return 0
 
 def calculate_interest(principal, start_date, end_date, loan_type):
-    total_months = calculate_total_custom_months(start_date, end_date)
+    months = calculate_total_custom_months(start_date, end_date)
     rate = get_interest_rate(principal, loan_type)
-    interest = (principal / 100) * rate * total_months
+    interest = (principal / 100) * rate * months
     payable = principal + interest
-    return round(total_months, 2), round(interest, 2), round(payable, 2)
+    return round(months, 2), round(interest, 2), round(payable, 2)
     
     if not st.session_state.loan_done:
         with st.form("loan_form"):
