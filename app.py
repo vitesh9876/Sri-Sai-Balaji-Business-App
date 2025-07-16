@@ -1,10 +1,10 @@
 import streamlit as st
 import pandas as pd
 import os
-from datetime import datetime, date
+from datetime import date
+from dateutil.relativedelta import relativedelta
 import difflib
 import streamlit.components.v1 as components
-from dateutil.relativedelta import relativedelta
 
 # -------------------- Constants --------------------
 CUSTOMER_FILE = "customers.csv"
@@ -153,43 +153,47 @@ elif menu == "Finance Calculator":
     # Loan type selection inside the block
     loan_type = st.selectbox("Select Loan Type", ["Gold", "Silver"])
 
-    def calculate_total_months(start_date, end_date):
-        full_months = (end_date.year - start_date.year) * 12 + end_date.month - start_date.month
+    def calculate_total_custom_months(start_date: date, end_date: date) -> float:
+    # Step 1: Get number of full months
+    full_months = (end_date.year - start_date.year) * 12 + (end_date.month - start_date.month)
 
-        # Adjust the last month
-        if 8 <= end_date.day <= 15:
-            partial_month = 0.5
-        elif end_date.day > 15:
-            partial_month = 1
-        else:  # end_date.day <= 7
-            partial_month = 0
+    # Calculate anchor day (same day in end month)
+    anchor_day = start_date.day
+    anchor_month_date = start_date + relativedelta(months=full_months)
+    
+    if end_date >= anchor_month_date:
+        full_months += 1
+        extra_days = (end_date - anchor_month_date).days
+    else:
+        extra_days = (end_date - (anchor_month_date - relativedelta(months=1))).days
+        full_months -= 1  # Because end date is before anchor
 
-        return full_months + partial_month
+    # Step 2: Adjust based on extra days
+    if extra_days <= 7:
+        extra = 0
+    elif 8 <= extra_days <= 15:
+        extra = 0.5
+    else:
+        extra = 1
 
-    def get_interest_rate(amount):
-        if loan_type == "Gold":
-            return 2 if amount >= 5000 else 3
-        elif loan_type == "Silver":
-            return 5
+    return full_months + extra
 
-    def calculate_gold_loan(principal, start_date, end_date):
-        total_months = calculate_total_months(start_date, end_date)
-        total_interest = 0
-        original_principal = principal
-        month_counter = 0
 
-        while month_counter < total_months:
-            months_this_cycle = min(12, total_months - month_counter)
-            rate = get_interest_rate(principal)
-            monthly_interest = (principal / 100) * rate
-            cycle_interest = monthly_interest * months_this_cycle
-            total_interest += cycle_interest
-            principal += cycle_interest
-            month_counter += months_this_cycle
+    def get_interest_rate(amount, loan_type):
+    if loan_type == "Gold":
+        return 2 if amount >= 5000 else 3
+    elif loan_type == "Silver":
+        return 5
+    else:
+        return 0
 
-        total_payable = original_principal + total_interest
-        return total_months, round(total_interest, 2), round(total_payable, 2)
-
+def calculate_interest(principal, start_date, end_date, loan_type):
+    total_months = calculate_total_custom_months(start_date, end_date)
+    rate = get_interest_rate(principal, loan_type)
+    interest = (principal / 100) * rate * total_months
+    payable = principal + interest
+    return round(total_months, 2), round(interest, 2), round(payable, 2)
+    
     if not st.session_state.loan_done:
         with st.form("loan_form"):
             st.subheader("💰 Loan Details")
