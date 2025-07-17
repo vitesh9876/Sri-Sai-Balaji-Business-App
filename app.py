@@ -5,6 +5,8 @@ from datetime import date
 from dateutil.relativedelta import relativedelta
 import difflib
 import streamlit.components.v1 as components
+from datetime import datetime
+
 
 # -------------------- Constants --------------------
 CUSTOMER_FILE = "customers.csv"
@@ -147,74 +149,55 @@ if menu == "Billing":
 
 # (Finance Calculator, Customer History, and Customer Details sections continue below...)
 
-elif menu == "Finance Calculator":
+if menu == "Finance Calculator":
     st.header("🏦 Finance Calculator")
     
     # Loan type selection inside the block
     loan_type = st.selectbox("Select Loan Type", ["Gold", "Silver"])
 
-def calculate_total_custom_months(start_date: date, end_date: date) -> float:
-if end_date <= start_date:
-return 0.0
+    def calculate_total_custom_months(start_date: date, end_date: date) -> float:
+        if end_date <= start_date:
+            return 0.0
 
-    full_months = (end_date.year - start_date.year) * 12 + (end_date.month - start_date.month)
+        # Step 1: Count full months
+        full_months = (end_date.year - start_date.year) * 12 + (end_date.month - start_date.month)
 
-    try:
-        anchor_date = start_date + relativedelta(months=full_months)
-    except ValueError:
-        anchor_date = (start_date.replace(day=1) + relativedelta(months=full_months + 1)) - relativedelta(days=1)
+        try:
+            anchor_date = start_date + relativedelta(months=full_months)
+        except ValueError:
+            # Handles cases like Jan 31 → Feb
+            anchor_date = (start_date.replace(day=1) + relativedelta(months=full_months + 1)) - relativedelta(days=1)
 
-    if end_date >= anchor_date:
-        extra_days = (end_date - anchor_date).days
-        full_months += 1
-    else:
-        prev_anchor = start_date + relativedelta(months=full_months - 1)
-        extra_days = (end_date - prev_anchor).days
+        if end_date >= anchor_date:
+            extra_days = (end_date - anchor_date).days
+            full_months += 1
+        else:
+            prev_anchor = start_date + relativedelta(months=full_months - 1)
+            extra_days = (end_date - prev_anchor).days
 
-    if extra_days <= 7:
-        partial_month = 0
-    elif 8 <= extra_days <= 15:
-        partial_month = 0.5
-    else:
-        partial_month = 1
+        # Step 2: Convert extra days into partial months
+        if extra_days <= 7:
+            partial_month = 0
+        elif 8 <= extra_days <= 15:
+            partial_month = 0.5
+        else:
+            partial_month = 1
 
-    return full_months - 1 + partial_month
+        return full_months - 1 + partial_month
 
+    # Dummy function for demonstration; replace with your actual calculation
+    def calculate_gold_loan(amount, start_date, end_date):
+        months = calculate_total_custom_months(start_date, end_date)
+        # Example interest calculation
+        rate = 2.0 if loan_type == "Gold" else 1.5
+        interest = round(amount * rate * months / 100, 2)
+        payable = round(amount + interest, 2)
+        return months, interest, payable
 
-def calculate_total_custom_months(start_date: date, end_date: date) -> float:
-    if end_date <= start_date:
-        return 0.0
-
-    # Step 1: Count full months
-    full_months = (end_date.year - start_date.year) * 12 + (end_date.month - start_date.month)
-
-    try:
-        anchor_date = start_date + relativedelta(months=full_months)
-    except ValueError:
-        # Handles cases like Jan 31 → Feb
-        anchor_date = (start_date.replace(day=1) + relativedelta(months=full_months + 1)) - relativedelta(days=1)
-
-    if end_date >= anchor_date:
-        extra_days = (end_date - anchor_date).days
-        full_months += 1
-    else:
-        prev_anchor = start_date + relativedelta(months=full_months - 1)
-        extra_days = (end_date - prev_anchor).days
-
-    # Step 2: Convert extra days into partial months
-    if extra_days <= 7:
-        partial_month = 0
-    elif 8 <= extra_days <= 15:
-        partial_month = 0.5
-    else:
-        partial_month = 1
-
-    return full_months - 1 + partial_month
-    
     if not st.session_state.loan_done:
         with st.form("loan_form"):
             st.subheader("💰 Loan Details")
-            amount = st.number_input("Loan Amount (₹)", min_value=, step=)
+            amount = st.number_input("Loan Amount (₹)", min_value=0.0, step=100.0, value=None, placeholder="Enter amount")
             start_date = st.date_input("Loan Taken Date", value=date.today())
             end_date = st.date_input("Loan Release Date", value=date.today())
             calculate = st.form_submit_button("Calculate")
@@ -280,7 +263,7 @@ def calculate_total_custom_months(start_date: date, end_date: date) -> float:
         else:
             st.warning("Please enter all customer details to print the receipt.")
 
-elif menu == "Customer History":
+if menu == "Customer History":
     st.header("📋 Customer History")
 
     if not os.path.exists(CUSTOMER_FILE):
@@ -329,7 +312,7 @@ elif menu == "Customer History":
                         st.write("**Purchase History:**")
                         st.dataframe(customer_data[["Bill No", "Date", "Item", "Total"]], use_container_width=True)
 
-elif menu == "Customer Details":
+if menu == "Customer Details":
     st.header("🧾 Manage Customer Details")
 
     def load_customer_details():
@@ -345,7 +328,7 @@ elif menu == "Customer Details":
         if st.button("➕ Add New Customer"):
             st.session_state.show_add_form = True
 
-    if st.session_state.show_add_form:
+    if st.session_state.get("show_add_form", False):
         with st.form("add_customer_form", clear_on_submit=True):
             st.subheader("➕ Add New Customer")
             name = st.text_input("Customer Name")
@@ -393,52 +376,23 @@ elif menu == "Customer Details":
                 st.write(f"**Father/Husband:** {row['Father/Husband']}")
                 st.write(f"**Description:** {row['Description']}")
 
-                col_mod, col_del = st.columns([1, 1])
+                col_mod, col_del = st.columns(2)
                 with col_mod:
-                    if st.button(f"✏️ Modify - {i}"):
+                    if st.button(f"✏️ Modify - {i}", key=f"modify_{i}"):
                         st.session_state.modify_index = i
                 with col_del:
-                    if st.button(f"🗑️ Delete - {i}"):
+                    if st.button(f"🗑️ Delete - {i}", key=f"delete_{i}"):
                         st.session_state.delete_index = i
 
-        if st.session_state.modify_index is not None:
+        # Modify customer
+        if st.session_state.get("modify_index") is not None:
             idx = st.session_state.modify_index
-            customer = data.loc[idx]
-
-            with st.form("modify_form"):
-                st.subheader("✏️ Modify Customer")
-                name = st.text_input("Customer Name", value=customer["Name"])
-                contact = st.text_input("Contact Number", value=customer["Contact"])
-                address = st.text_area("Address", value=customer["Address"])
-                aadhaar = st.text_input("Aadhaar Number", value=customer["Aadhaar"])
-                relation = st.text_input("Father's / Husband's Name", value=customer["Father/Husband"])
-                description = st.text_area("Description", value=customer["Description"])
-
-                modify_submit = st.form_submit_button("Update Customer")
-                if modify_submit:
-                    data.at[idx, "Name"] = name
-                    data.at[idx, "Contact"] = contact
-                    data.at[idx, "Address"] = address
-                    data.at[idx, "Aadhaar"] = aadhaar
-                    data.at[idx, "Father/Husband"] = relation
-                    data.at[idx, "Description"] = description
-                    data.to_csv(CUSTOMER_DETAILS_FILE, index=False)
-                    st.success("✅ Customer details updated.")
-                    st.session_state.modify_index = None
-                    st.rerun()
-
-        if st.session_state.delete_index is not None:
-            idx = st.session_state.delete_index
-            customer = data.loc[idx]
-            st.warning(f"Are you sure you want to delete customer: **{customer['Name']}**?")
-            col_yes, col_no = st.columns([1, 1])
-            with col_yes:
-                if st.button("✅ Yes, Delete"):
-                    data = data.drop(index=idx).reset_index(drop=True)
-                    data.to_csv(CUSTOMER_DETAILS_FILE, index=False)
-                    st.success("🗑️ Customer deleted successfully.")
-                    st.session_state.delete_index = None
-                    st.rerun()
-            with col_no:
-                if st.button("❌ Cancel"):
-                    st.session_state.delete_index = None
+            if idx < len(data):
+                customer = data.loc[idx]
+                with st.form("modify_form"):
+                    st.subheader("✏️ Modify Customer")
+                    name = st.text_input("Customer Name", value=customer["Name"])
+                    contact = st.text_input("Contact Number", value=customer["Contact"])
+                    address = st.text_area("Address", value=customer["Address"])
+                    aadhaar = st.text_input("Aadhaar Number", value=customer["Aadhaar"])
+                    relation = st.text_input("Father's / Husband's Name", value=customer["Father/Husband"])
