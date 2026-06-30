@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sri Sai Balaji Furniture & Jewelry - Admin Panel</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js for Historical Trends -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-logo">SBJ</div>
+                <div class="brand-name">Sri Sai Balaji</div>
+                <div class="brand-sub">Furniture & Jewelry</div>
+            </div>
+            <nav class="nav-menu">
+                <button class="nav-item active" data-tab="welcome">
+                    <span class="icon">🏠</span> Welcome Dashboard
+                </button>
+                <button class="nav-item" data-tab="calculator">
+                    <span class="icon">🧮</span> Interest Calculator
+                </button>
+                <button class="nav-item" data-tab="predictor">
+                    <span class="icon">📈</span> Loan Predictor
+                </button>
+                <button class="nav-item" data-tab="prices">
+                    <span class="icon">💰</span> Detailed Prices
+                </button>
+                <button class="nav-item" data-tab="item-predictor">
+                    <span class="icon">💎</span> Furniture Item Predictor
+                </button>
+            </nav>
+            <div class="location-badge">
+                <span class="dot"></span> Vijayawada (Live)
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Topbar / Live Price Banner -->
+            <header class="topbar">
+                <div class="welcome-text">
+                    <h1>Sri Sai Balaji Admin Panel</h1>
+                    <p id="current-time-display"></p>
+                </div>
+                <div class="live-rates-summary">
+                    <div class="mini-rate">
+                        <span class="label">Gold 22K (Live/Vijayawada)</span>
+                        <span class="value" id="header-gold-rate">₹13,195/g</span>
+                    </div>
+                    <div class="mini-rate">
+                        <span class="label">Silver (Live/Vijayawada)</span>
+                        <span class="value" id="header-silver-rate">₹216.50/g</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- TAB 1: Welcome Page -->
+            <section class="tab-content active" id="tab-welcome">
+                <div class="hero-section">
+                    <div class="hero-overlay"></div>
+                    <div class="hero-content">
+                        <h2>Welcome to Sri Sai Balaji Furniture and Jewelry</h2>
+                        <p class="hero-subtitle">Premium jewelry solutions and gold loans services based in Vijayawada.</p>
+                    </div>
+                </div>
+
+                <h3 class="section-title">Live Metal Rates (Vijayawada)</h3>
+                <div class="grid-rates">
+                    <div class="rate-card gold-card">
+                        <div class="card-glow"></div>
+                        <div class="card-header">
+                            <span class="tag">Gold 24K</span>
+                            <span class="trend up">▲ Live</span>
+                        </div>
+                        <div class="card-price">
+                            <span class="symbol">₹</span>
+                            <span class="value" id="gold-24k-rate">13,849</span>
+                            <span class="unit">/ gram</span>
+                        </div>
+                        <p class="card-meta">Pure Gold (99.9%)</p>
+                    </div>
+
+                    <div class="rate-card gold-card-22">
+                        <div class="card-glow"></div>
+                        <div class="card-header">
+                            <span class="tag">Gold 22K</span>
+                            <span class="trend up">▲ Live</span>
+                        </div>
+                        <div class="card-price">
+                            <span class="symbol">₹</span>
+                            <span class="value" id="gold-22k-rate">13,195</span>
+                            <span class="unit">/ gram</span>
+                        </div>
+                        <p class="card-meta">Standard Jewelry Gold (91.6%)</p>
+                    </div>
+
+                    <div class="rate-card silver-card">
+                        <div class="card-glow"></div>
+                        <div class="card-header">
+                            <span class="tag">Silver</span>
+                            <span class="trend up">▲ Live</span>
+                        </div>
+                        <div class="card-price">
+                            <span class="symbol">₹</span>
+                            <span class="value" id="silver-rate">216.50</span>
+                            <span class="unit">/ gram</span>
+                        </div>
+                        <p class="card-meta">₹2,16,500 / kilogram</p>
+                    </div>
+                </div>
+
+                <div class="quick-admin-actions">
+                    <h3>Quick Administration Tools</h3>
+                    <p>Modify local default rates used across interest calculation and loan prediction tabs:</p>
+                    <div class="form-row inline">
+                        <div class="input-group">
+                            <label for="admin-gold-override">Gold Rate (22K) per Gram</label>
+                            <input type="number" id="admin-gold-override" value="13195" step="1">
+                        </div>
+                        <div class="input-group">
+                            <label for="admin-silver-override">Silver Rate per Gram</label>
+                            <input type="number" id="admin-silver-override" value="216.50" step="0.1">
+                        </div>
+                        <button class="btn btn-gold" id="btn-update-rates">Apply Custom Rates</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 2: Loan Interest Calculator -->
+            <section class="tab-content" id="tab-calculator">
+                <div class="glass-card">
+                    <h2 class="card-title">Loan Interest Calculator</h2>
+                    <p class="card-subtitle">Annual compounding with exact fractional month intervals.</p>
+                    
+                    <div class="calculator-layout">
+                        <!-- Left Panel: Form Inputs & Rules -->
+                        <div class="calc-form">
+                            <div class="form-row">
+                                <div class="input-group">
+                                    <label>Metal Type</label>
+                                    <div class="radio-toggle">
+                                        <input type="radio" id="calc-metal-gold" name="calc-metal" value="gold" checked>
+                                        <label for="calc-metal-gold">Gold</label>
+                                        <input type="radio" id="calc-metal-silver" name="calc-metal" value="silver">
+                                        <label for="calc-metal-silver">Silver</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="input-group">
+                                    <label for="calc-amount">Loan Amount (₹)</label>
+                                    <input type="number" id="calc-amount" placeholder="e.g. 10000" min="1" required>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row dates-selectors-row">
+                                 <!-- Date Taken Selector Display Box -->
+                                 <div class="input-group">
+                                     <label>Date Taken</label>
+                                     <button type="button" class="btn-picker-display" id="btn-start-date-picker">Select Date</button>
+                                 </div>
+                                 <!-- Settlement Date Selector Display Box -->
+                                 <div class="input-group">
+                                     <label>Settlement Date</label>
+                                     <button type="button" class="btn-picker-display" id="btn-end-date-picker">Select Date</button>
+                                 </div>
+                             </div>
+
+                             <!-- Modal Wheel Picker Container -->
+                             <div class="picker-modal-overlay" id="date-picker-modal">
+                                 <div class="picker-modal-card">
+                                     <div class="picker-modal-header">
+                                         <h3 id="picker-modal-title">Select Date</h3>
+                                         <button type="button" class="btn-modal-close" id="btn-close-modal">×</button>
+                                     </div>
+                                     <div class="date-wheel-container">
+                                         <!-- Days column -->
+                                         <div class="wheel-column" id="wheel-col-day">
+                                             <div class="wheel-label">Day</div>
+                                             <div class="wheel-viewport">
+                                                 <div class="wheel-scroller" id="scroller-day"></div>
+                                             </div>
+                                         </div>
+                                         <!-- Months column -->
+                                         <div class="wheel-column" id="wheel-col-month">
+                                             <div class="wheel-label">Month</div>
+                                             <div class="wheel-viewport">
+                                                 <div class="wheel-scroller" id="scroller-month"></div>
+                                             </div>
+                                         </div>
+                                         <!-- Years column -->
+                                         <div class="wheel-column" id="wheel-col-year">
+                                             <div class="wheel-label">Year</div>
+                                             <div class="wheel-viewport">
+                                                 <div class="wheel-scroller" id="scroller-year"></div>
+                                             </div>
+                                         </div>
+                                     </div>
+                                     <button type="button" class="btn btn-gold btn-full" id="btn-confirm-picker" style="margin-top: 1.5rem;">Confirm Date</button>
+                                 </div>
+                             </div>
+
+                             <button class="btn btn-gold btn-full" id="btn-calc-interest">Calculate Statement</button>
+
+                             <!-- Interest Rules Summary Alert -->
+                             <div class="info-alert" style="margin-top: 1.5rem;">
+                                 <h4>📝 Rules Applied:</h4>
+                                 <ul>
+                                     <li><strong>Gold interest rate:</strong> 3% (₹3/₹100 per month) if loan < ₹8,000; 2% (₹2/₹100 per month) if loan ≥ ₹8,000.</li>
+                                     <li><strong>Silver interest rate:</strong> 5% (₹5/₹100 per month) regardless of the loan size.</li>
+                                     <li><strong>Fractional Month Logic:</strong> Calculation starts from the specific taken date. If fractional days crossed:
+                                         <ul>
+                                             <li>10 to 19 days = Counts as a <strong>half month</strong> (0.5).</li>
+                                             <li>20 days and above = Counts as a <strong>full month</strong> (1.0).</li>
+                                             <li>Otherwise (under 10 days), fractional days do not add to these half/full checkpoints.</li>
+                                         </ul>
+                                     </li>
+                                     <li><strong>Annual Compounding:</strong> When the loan crosses an exact year mark, the accumulated principal + interest becomes the new principal base.</li>
+                                 </ul>
+                             </div>
+                        </div>
+
+                        <!-- Right Panel: Statement/Result -->
+                        <div class="calc-result" id="interest-result-panel">
+                            <div class="result-placeholder">
+                                <span class="placeholder-icon">📊</span>
+                                <p>Enter loan details and click calculate to view detailed interest, principal changes, and statement timeline.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 3: Loan Predictor -->
+            <section class="tab-content" id="tab-predictor">
+                <div class="glass-card">
+                    <h2 class="card-title">Loan Predictor</h2>
+                    <p class="card-subtitle">Determine the loan amount eligibility based on weight, current price, and cutoff.</p>
+
+                    <div class="predictor-grid">
+                        <div class="calc-form">
+                            <div class="form-row">
+                                <div class="input-group">
+                                    <label for="pred-weight">Weight of Gold (Grams)</label>
+                                    <input type="number" id="pred-weight" placeholder="e.g. 10" step="0.01" min="0.01" required>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="input-group">
+                                    <label for="pred-rate">Gold Price per Gram (22K) (₹)</label>
+                                    <input type="number" id="pred-rate" placeholder="Enter custom price" step="1" required>
+                                </div>
+                            </div>
+                            <button class="btn btn-gold btn-full" id="btn-predict-loan">Predict Eligibility</button>
+                        </div>
+
+                        <div class="predictor-results" id="pred-result-card">
+                            <div class="pred-placeholder">
+                                <h3>Calculation Preview</h3>
+                                <p>Provide gold weight and check parameters to generate loan values.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 4: Detailed Prices -->
+            <section class="tab-content" id="tab-prices">
+                <div class="glass-card">
+                    <h2 class="card-title">Detailed Prices & Market Trends</h2>
+                    <p class="card-subtitle">Gold & Silver live details and historical 7-day movement visualization.</p>
+                    
+                    <div class="detailed-prices-layout">
+                        <div class="price-tables">
+                            <div class="table-container">
+                                <h3>Gold Price Catalog</h3>
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Purity</th>
+                                            <th>Price per Gram</th>
+                                            <th>Price per 8 Grams (Sovereign)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>24K (Pure Gold)</td>
+                                            <td id="det-gold-24k-1">₹6,524</td>
+                                            <td id="det-gold-24k-8">₹52,192</td>
+                                        </tr>
+                                        <tr>
+                                            <td>22K (Standard Jewelry)</td>
+                                            <td id="det-gold-22k-1">₹5,980</td>
+                                            <td id="det-gold-22k-8">₹47,840</td>
+                                        </tr>
+                                        <tr>
+                                            <td>18K (Casual Jewelry)</td>
+                                            <td id="det-gold-18k-1">₹4,893</td>
+                                            <td id="det-gold-18k-8">₹39,144</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="table-container">
+                                <h3>Silver Price Catalog</h3>
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Quantity</th>
+                                            <th>Rate (₹)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>1 Gram</td>
+                                            <td id="det-silver-1">₹76.00</td>
+                                        </tr>
+                                        <tr>
+                                            <td>10 Grams (Tola)</td>
+                                            <td id="det-silver-10">₹760.00</td>
+                                        </tr>
+                                        <tr>
+                                            <td>100 Grams</td>
+                                            <td id="det-silver-100">₹7,600.00</td>
+                                        </tr>
+                                        <tr>
+                                            <td>1 Kilogram</td>
+                                            <td id="det-silver-kg">₹76,000.00</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="chart-container-wrapper">
+                            <h3>Historical 7-Day Price Movement Trend</h3>
+                            <div class="chart-container">
+                                <canvas id="metalTrendsChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 5: Furniture Item Predictor -->
+            <section class="tab-content" id="tab-item-predictor">
+                <div class="glass-card" style="text-align: center; padding: 4rem 2rem;">
+                    <div class="placeholder-icon" style="font-size: 4rem; margin-bottom: 1.5rem;">🛋️</div>
+                    <h2 class="card-title" style="font-size: 2rem; margin-bottom: 1rem;">Furniture Item Predictor</h2>
+                    <p class="card-subtitle" style="font-size: 1.2rem; color: var(--accent-gold);">Furniture implementation Coming soon</p>
+                    <p style="color: var(--text-muted); max-width: 500px; margin: 0 auto;">We are currently developing advanced cost estimation tools .</p>
+                </div>
+            </section>
+        </main>
+    </div>
+    <script src="index.js"></script>
+</body>
+</html>
