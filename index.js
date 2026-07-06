@@ -1601,7 +1601,7 @@ function initItemPricePredictor() {
     }
 
     // CRUD Product form submission handler
-    productCrudForm.addEventListener('submit', (e) => {
+    productCrudForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const pid = document.getElementById('form-product-id').value;
         const name = document.getElementById('form-product-name').value;
@@ -1610,6 +1610,22 @@ function initItemPricePredictor() {
         const discountedPrice = parseInt(document.getElementById('form-product-discounted').value);
         const mrp = parseInt(document.getElementById('form-product-mrp').value);
         let image = document.getElementById('form-product-image').value;
+
+        // Process file input if selected
+        const fileInput = document.getElementById('form-product-image-file');
+        if (fileInput && fileInput.files && fileInput.files[0]) {
+            try {
+                const getBase64 = (file) => new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.readAsDataURL(file);
+                    reader.onload = () => resolve(reader.result);
+                    reader.onerror = error => reject(error);
+                });
+                image = await getBase64(fileInput.files[0]);
+            } catch (err) {
+                console.error("Failed to read product image file:", err);
+            }
+        }
 
         if (!image) {
             image = 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&q=80&w=400';
@@ -2013,14 +2029,30 @@ function initCustomerDirectory() {
     }
 
     if (customerCrudForm) {
-        customerCrudForm.addEventListener('submit', (e) => {
+        customerCrudForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const id = document.getElementById('form-customer-id').value;
             const name = document.getElementById('form-customer-name').value.trim();
             const phone = document.getElementById('form-customer-phone').value.trim();
             const address = document.getElementById('form-customer-address').value.trim();
-            const idproof = document.getElementById('form-customer-idproof').value.trim();
+            let idproof = document.getElementById('form-customer-idproof').value.trim();
             const remarks = document.getElementById('form-customer-remarks').value.trim();
+
+            // Process file input if selected
+            const fileInput = document.getElementById('form-customer-idproof-file');
+            if (fileInput && fileInput.files && fileInput.files[0]) {
+                try {
+                    const getBase64 = (file) => new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.readAsDataURL(file);
+                        reader.onload = () => resolve(reader.result);
+                        reader.onerror = error => reject(error);
+                    });
+                    idproof = await getBase64(fileInput.files[0]);
+                } catch (err) {
+                    console.error("Failed to read customer ID proof file:", err);
+                }
+            }
 
             let savedObj = null;
             if (id) {

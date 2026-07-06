@@ -571,8 +571,10 @@
                                     </div>
                                 </div>
                                 <div class="input-group">
-                                    <label for="form-product-image">Product Image URL (Leave blank for default)</label>
-                                    <input type="url" id="form-product-image" placeholder="https://images.unsplash.com/...">
+                                    <label for="form-product-image">Product Image Link (URL)</label>
+                                    <input type="url" id="form-product-image" placeholder="https://images.unsplash.com/..." style="margin-bottom: 0.5rem;">
+                                    <label for="form-product-image-file" style="font-size: 0.85rem; color: var(--text-muted);">Or Take Photo / Upload File</label>
+                                    <input type="file" id="form-product-image-file" accept="image/*" style="padding: 0.5rem; background: var(--bg-secondary); border: 1px dashed var(--border-color); border-radius: 8px; color: var(--text-primary); font-size: 0.85rem; cursor: pointer;">
                                 </div>
                                 <div style="display: flex; gap: 1rem; margin-top: 1rem;">
                                     <button type="submit" class="btn btn-gold" id="btn-save-product">Save Product</button>
@@ -640,8 +642,10 @@
                             </div>
                             <div class="form-row">
                                 <div class="input-group">
-                                    <label for="form-customer-idproof">Upload ID Proof (Optional - Image URL / File Link)</label>
-                                    <input type="text" id="form-customer-idproof" placeholder="e.g. https://link-to-id-image.com" style="padding: 0.8rem;">
+                                    <label for="form-customer-idproof">ID Proof Link (URL)</label>
+                                    <input type="text" id="form-customer-idproof" placeholder="e.g. https://link-to-id-image.com" style="padding: 0.8rem; margin-bottom: 0.5rem;">
+                                    <label for="form-customer-idproof-file" style="font-size: 0.8rem; opacity: 0.9;">Or Take Photo / Upload File</label>
+                                    <input type="file" id="form-customer-idproof-file" accept="image/*" style="padding: 0.5rem; background: var(--bg-secondary); border: 1px dashed var(--border-color); border-radius: 8px; color: var(--text-primary); font-size: 0.85rem;">
                                 </div>
                                 <div class="input-group">
                                     <label for="form-customer-remarks">Internal Remarks</label>
