@@ -986,13 +986,48 @@ function initItemPricePredictor() {
 
     let html5QrcodeScanner = null;
 
+    // Full-screen Admin Login Gate elements
+    const gateLoginBtn = document.getElementById('btn-gate-login');
+    const gatePasscodeInp = document.getElementById('gate-passcode');
+    const loginGate = document.getElementById('admin-login-gate');
+    const sidebarLogoutBtn = document.getElementById('sidebar-logout-btn');
+
+    if (gateLoginBtn) {
+        gateLoginBtn.addEventListener('click', () => {
+            const code = gatePasscodeInp.value;
+            if (code === '1004') {
+                isAdmin = true;
+                localStorage.setItem('furniture_admin_logged', 'true');
+                if (loginGate) loginGate.style.display = 'none';
+                updateAdminPanelVisibility();
+            } else {
+                alert('Invalid admin passcode!');
+            }
+        });
+    }
+
+    if (sidebarLogoutBtn) {
+        sidebarLogoutBtn.addEventListener('click', () => {
+            isAdmin = false;
+            localStorage.setItem('furniture_admin_logged', 'false');
+            if (loginGate) {
+                loginGate.style.display = 'flex';
+                gatePasscodeInp.value = '';
+            }
+            updateAdminPanelVisibility();
+            alert('Admin logged out successfully.');
+        });
+    }
+
     // Toggle admin management display
     function updateAdminPanelVisibility() {
         if (isAdmin) {
+            if (loginGate) loginGate.style.display = 'none';
             btnAdminToggle.textContent = '🔓 Log Out Admin';
             adminLoginCard.style.display = 'none';
             adminCatalogManager.style.display = 'block';
         } else {
+            if (loginGate) loginGate.style.display = 'flex';
             btnAdminToggle.textContent = '🔒 Admin Dashboard';
             adminLoginCard.style.display = 'none';
             adminCatalogManager.style.display = 'none';
@@ -1017,7 +1052,7 @@ function initItemPricePredictor() {
     // Passcode submission check (Default Admin passcode: "1234")
     btnLoginAuth.addEventListener('click', () => {
         const passcode = document.getElementById('admin-passcode').value;
-        if (passcode === '1234') {
+        if (passcode === '1004') {
             isAdmin = true;
             localStorage.setItem('furniture_admin_logged', 'true');
             document.getElementById('admin-passcode').value = '';
