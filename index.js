@@ -632,7 +632,7 @@ function calculateLoanInterest(metal, amount, startDate, endDate) {
     const totalInterestGained = totalFinalPayable - amount;
 
     // Display statement panel
-    const resultPanel = document.getElementById('interest-result-panel');
+    const resultPanel = document.getElementById('calc-result-panel');
     let timelineHTML = '';
     
     compoundingLog.forEach(log => {
