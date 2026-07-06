@@ -1354,21 +1354,27 @@ function initItemPricePredictor() {
                 const card = document.createElement('div');
                 card.style.background = '#fff';
                 card.style.color = '#000';
-                card.style.padding = '8px';
+                card.style.padding = '6px';
                 card.style.display = 'flex';
                 card.style.flexDirection = 'column';
                 card.style.alignItems = 'center';
                 card.style.justifyContent = 'center';
                 card.style.borderRadius = '4px';
-                card.style.width = `${size + 24}px`;
+                card.style.width = `${size + 16}px`;
                 card.style.border = showBorder ? '1px dashed #ccc' : 'none';
                 
+                // Scale text sizes dynamically based on size
+                const headerFontSize = Math.max(8, Math.round(size * 0.07));
+                const codeFontSize = Math.max(7, Math.round(size * 0.055));
+                const priceFontSize = Math.max(7, Math.round(size * 0.055));
+                const highlightFontSize = Math.max(8, Math.round(size * 0.065));
+
                 card.innerHTML = `
-                    <div style="font-size: 9px; font-weight: 800; text-transform: uppercase; margin-bottom: 2px; letter-spacing: 0.5px;">Sri Sai Balaji</div>
+                    <div style="font-size: ${headerFontSize}px; font-weight: 800; text-transform: uppercase; margin-bottom: 2px; letter-spacing: 0.5px; text-align: center; white-space: nowrap; width: 100%; overflow: hidden; text-overflow: ellipsis;">Sri Sai Balaji</div>
                     <div class="preview-qr-box" style="width: ${size}px; height: ${size}px; display: flex; align-items: center; justify-content: center; background: #f0f0f0; font-size: 10px; color: #888; margin: 2px 0;">[QR Code]</div>
-                    <div style="font-size: 8px; font-family: monospace; font-weight: 700; margin: 2px 0;">CODE: ${task.item.id}</div>
-                    ${showMRP ? `<div style="font-size: 8px; color: #666; margin: 1px 0;">MRP: ₹${task.item.mrp.toLocaleString('en-IN')}</div>` : ''}
-                    ${showPrice ? `<div style="font-size: 9px; font-weight: 700; color: #000; margin: 1px 0;">Price: ₹${task.item.discountedPrice.toLocaleString('en-IN')}</div>` : ''}
+                    <div style="font-size: ${codeFontSize}px; font-family: monospace; font-weight: 700; margin: 2px 0; white-space: nowrap; width: 100%; overflow: hidden; text-overflow: ellipsis; text-align: center;">CODE: ${task.item.id}</div>
+                    ${showMRP ? `<div style="font-size: ${priceFontSize}px; color: #666; margin: 1px 0; white-space: nowrap; width: 100%; overflow: hidden; text-overflow: ellipsis; text-align: center;">MRP: ₹${task.item.mrp.toLocaleString('en-IN')}</div>` : ''}
+                    ${showPrice ? `<div style="font-size: ${highlightFontSize}px; font-weight: 700; color: #000; margin: 1px 0; white-space: nowrap; width: 100%; overflow: hidden; text-overflow: ellipsis; text-align: center;">Price: ₹${task.item.discountedPrice.toLocaleString('en-IN')}</div>` : ''}
                 `;
                 gridDiv.appendChild(card);
             }
@@ -1425,11 +1431,17 @@ function initItemPricePredictor() {
             
             let labelsHtml = '';
             
+            // Scale text sizes dynamically based on size
+            const headerFontSize = Math.max(8, Math.round(size * 0.07));
+            const codeFontSize = Math.max(7, Math.round(size * 0.055));
+            const priceFontSize = Math.max(7, Math.round(size * 0.055));
+            const highlightFontSize = Math.max(8, Math.round(size * 0.065));
+
             printTasks.forEach(task => {
                 const customerURL = window.location.origin + '/scan.html?id=' + task.item.id;
                 for (let i = 0; i < task.qty; i++) {
                     labelsHtml += `
-                        <div class="label-card" style="width: ${size + 24}px; border: ${showBorder ? '1px dashed #ccc' : 'none'};">
+                        <div class="label-card" style="width: ${size + 16}px; border: ${showBorder ? '1px dashed #ccc' : 'none'};">
                             <div class="shop-header">Sri Sai Balaji</div>
                             <div class="qr-placeholder" data-url="${customerURL}"></div>
                             <div class="code-id">CODE: ${task.item.id}</div>
@@ -1460,7 +1472,7 @@ function initItemPricePredictor() {
                         }
                         .label-card {
                             border-radius: 8px;
-                            padding: 8px;
+                            padding: 6px;
                             display: flex;
                             flex-direction: column;
                             align-items: center;
@@ -1470,28 +1482,40 @@ function initItemPricePredictor() {
                             page-break-inside: avoid;
                         }
                         .shop-header {
-                            font-size: 10px;
+                            font-size: ${headerFontSize}px;
                             font-weight: 800;
                             letter-spacing: 0.5px;
                             text-transform: uppercase;
                             margin-bottom: 2px;
                             color: #000;
+                            white-space: nowrap;
+                            width: 100%;
+                            overflow: hidden;
+                            text-overflow: ellipsis;
                         }
                         .code-id {
-                            font-size: 9px;
+                            font-size: ${codeFontSize}px;
                             font-family: monospace;
                             font-weight: 700;
                             margin: 2px 0;
+                            white-space: nowrap;
+                            width: 100%;
+                            overflow: hidden;
+                            text-overflow: ellipsis;
                         }
                         .price-line {
-                            font-size: 9px;
+                            font-size: ${priceFontSize}px;
                             color: #555;
                             margin: 1px 0;
+                            white-space: nowrap;
+                            width: 100%;
+                            overflow: hidden;
+                            text-overflow: ellipsis;
                         }
                         .price-line.highlight {
                             font-weight: 700;
                             color: #000;
-                            font-size: 10px;
+                            font-size: ${highlightFontSize}px;
                         }
                         @media print {
                             body { margin: 0; }
