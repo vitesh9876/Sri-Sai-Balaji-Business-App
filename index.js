@@ -1055,14 +1055,14 @@ function initItemPricePredictor() {
                     <div style="font-weight: 600;">${product.name}</div>
                     <div style="font-size: 0.8rem; color: var(--text-muted);">${product.description}</div>
                 </td>
+                <td style="color: var(--accent-gold); font-weight: 700; vertical-align: middle;">₹${product.mrp.toLocaleString('en-IN')}</td>
+                <td style="opacity: 0.6; font-size: 0.95rem; font-weight: 500; vertical-align: middle;">₹${product.discountedPrice.toLocaleString('en-IN')}</td>
                 <td style="vertical-align: middle;">
                     <div style="display: flex; align-items: center; gap: 0.4rem;">
                         <span class="secret-val" id="secret-${product.id}" data-price="₹${product.originalPrice.toLocaleString('en-IN')}" style="filter: blur(4px); cursor: pointer; user-select: none; font-weight: 600; color: #ff453a;">••••••</span>
                         <button type="button" class="btn-reveal-secret" data-id="${product.id}" style="background: none; border: none; cursor: pointer; padding: 0.2rem; font-size: 1.1rem; line-height: 1;" title="Reveal Price">👁️</button>
                     </div>
                 </td>
-                <td style="opacity: 0.6; font-size: 0.95rem; font-weight: 500; vertical-align: middle;">₹${product.discountedPrice.toLocaleString('en-IN')}</td>
-                <td style="color: var(--accent-gold); font-weight: 700; vertical-align: middle;">₹${product.mrp.toLocaleString('en-IN')}</td>
                 <td style="text-align: center; vertical-align: middle;">
                     <div style="display: flex; flex-direction: column; align-items: center; gap: 0.3rem; background: var(--bg-tertiary); padding: 0.5rem; border-radius: 8px; border: 1px solid var(--border-color); width: fit-content; margin: 0 auto;">
                         <div id="${labelCellId}" style="padding: 0.3rem; background: #fff; display: inline-block; border-radius: 4px;"></div>
