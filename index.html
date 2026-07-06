@@ -50,6 +50,51 @@
         </div>
     </div>
 
+    <!-- Multi QR Print Configuration Modal -->
+    <div id="multi-qr-print-modal" class="picker-modal-overlay" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.85); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(8px);">
+        <div class="picker-modal-card" style="max-width: 650px; width: 95%; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 20px; padding: 2rem; box-shadow: var(--card-shadow); position: relative; max-height: 90vh; overflow-y: auto;">
+            <button type="button" class="btn-modal-close" id="btn-close-multi-qr-modal" style="position: absolute; top: 15px; right: 20px; font-size: 1.5rem; background: none; border: none; color: var(--text-muted); cursor: pointer;">&times;</button>
+            <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; margin-bottom: 1.5rem;">
+                <h2 style="font-family: var(--font-heading); color: var(--accent-gold); font-size: 1.6rem; text-align: center;">🖨️ Bulk QR Code Label Printer</h2>
+                <p style="font-size: 0.8rem; color: var(--text-muted); text-align: center; text-transform: uppercase; letter-spacing: 1px;">Configure and print multiple tags</p>
+            </div>
+            <form id="multi-qr-print-form" class="calc-form">
+                <div class="form-row" style="margin-bottom: 1.2rem;">
+                    <div class="input-group">
+                        <label for="print-label-size">Label Size (Width / Height)</label>
+                        <select id="print-label-size" style="width: 100%; padding: 0.8rem; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-tertiary); color: var(--text-primary);">
+                            <option value="120">Small (120px / ~1.25 in)</option>
+                            <option value="150" selected>Medium (150px / ~1.5 in)</option>
+                            <option value="200">Large (200px / ~2 in)</option>
+                        </select>
+                    </div>
+                    <div class="input-group" style="display: flex; flex-direction: column; justify-content: flex-end;">
+                        <div style="display: flex; gap: 1rem; align-items: center; height: 100%; margin-bottom: 0.5rem;">
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.9rem; margin: 0;">
+                                <input type="checkbox" id="print-show-mrp" checked style="width: 16px; height: 16px; accent-color: var(--accent-gold);"> Show MRP Price
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.9rem; margin: 0;">
+                                <input type="checkbox" id="print-show-price" checked style="width: 16px; height: 16px; accent-color: var(--accent-gold);"> Show Selling Price
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: var(--text-muted); font-weight: 600;">Choose Items and Quantity</label>
+                    <div id="multi-qr-items-list" style="max-height: 250px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-tertiary); padding: 0.8rem; display: flex; flex-direction: column; gap: 0.6rem;">
+                        <!-- Populate dynamically with item checkbox list & qty stepper inputs -->
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                    <button type="submit" class="btn btn-gold btn-full" style="flex: 2; padding: 0.9rem;">Generate & Print Labels</button>
+                    <button type="button" class="btn" id="btn-cancel-multi-qr" style="flex: 1; background: var(--bg-tertiary); color: var(--text-primary); border: 1px solid var(--border-color);">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div class="app-container">
         <!-- Sidebar Navigation -->
         <aside class="sidebar">
@@ -454,7 +499,10 @@
                     <div id="admin-catalog-manager" class="glass-card" style="display: none;">
                         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; margin-bottom: 1.5rem;">
                             <h3 style="color: var(--accent-gold);">Product Inventory Catalog</h3>
-                            <button type="button" class="btn btn-gold" id="btn-open-add-product" style="padding: 0.5rem 1.2rem;">+ Add New Product</button>
+                            <div style="display: flex; gap: 0.8rem;">
+                                <button type="button" class="btn" id="btn-open-bulk-print" style="background: var(--bg-tertiary); color: var(--text-primary); border: 1px solid var(--border-color); padding: 0.5rem 1.2rem;">🖨️ Bulk Print QRs</button>
+                                <button type="button" class="btn btn-gold" id="btn-open-add-product" style="padding: 0.5rem 1.2rem;">+ Add New Product</button>
+                            </div>
                         </div>
 
                         <!-- ADD / EDIT PRODUCT MODAL FORM -->

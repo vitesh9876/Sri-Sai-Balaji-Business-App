@@ -1206,78 +1206,211 @@ function initItemPricePredictor() {
         document.querySelectorAll('.btn-print-qr').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const pid = e.currentTarget.getAttribute('data-id');
-                const prod = catalog.find(item => item.id === pid);
-                if (prod) {
-                    const printWindow = window.open('', '_blank', 'width=450,height=450');
-                    const qrContainerHtml = document.getElementById(`qr-${prod.id}`).innerHTML;
-                    printWindow.document.write(`
-                        <html>
-                        <head>
-                            <title>Print QR - ${prod.name}</title>
-                            <style>
-                                body {
-                                    font-family: 'Inter', sans-serif;
-                                    display: flex;
-                                    flex-direction: column;
-                                    align-items: center;
-                                    justify-content: center;
-                                    height: 100vh;
-                                    margin: 0;
-                                    text-align: center;
-                                }
-                                .label-card {
-                                    padding: 5px;
-                                    display: inline-block;
-                                }
-                                .shop-header {
-                                    font-size: 16px;
-                                    font-weight: 700;
-                                    margin-bottom: 2px;
-                                    letter-spacing: 1.5px;
-                                    text-transform: uppercase;
-                                    color: #000;
-                                }
-                                .qr-box {
-                                    margin: 2px 0;
-                                }
-                                .qr-box img {
-                                    display: block;
-                                    margin: 0 auto;
-                                    width: 150px;
-                                    height: 150px;
-                                }
-                                .code-id {
-                                    font-size: 14px;
-                                    font-family: monospace;
-                                    font-weight: 700;
-                                    margin-top: 2px;
-                                }
-                            </style>
-                        </head>
-                        <body>
-                            <div class="label-card">
-                                <div class="shop-header">Sri Sai Balaji</div>
-                                <div class="qr-box">${qrContainerHtml}</div>
-                                <div class="code-id">CODE: ${prod.id}</div>
-                            </div>
-                            <script>
-                                window.onload = function() {
-                                    // Scale QR image in print document
-                                    const img = document.querySelector('.qr-box img');
-                                    if (img) {
-                                        img.style.width = '150px';
-                                        img.style.height = '150px';
-                                    }
-                                    window.print();
-                                    setTimeout(() => window.close(), 500);
-                                };
-                            <\/script>
-                        </body>
-                        </html>
-                    `);
-                    printWindow.document.close();
+                openBulkPrintModalWithItem(pid);
+            });
+        });
+    }
+
+    // Modal elements for Bulk QR printing
+    const bulkPrintModal = document.getElementById('multi-qr-print-modal');
+    const btnOpenBulkPrint = document.getElementById('btn-open-bulk-print');
+    const btnCloseBulkPrint = document.getElementById('btn-close-multi-qr-modal');
+    const btnCancelBulkPrint = document.getElementById('btn-cancel-multi-qr');
+    const bulkItemsList = document.getElementById('multi-qr-items-list');
+    const bulkPrintForm = document.getElementById('multi-qr-print-form');
+
+    // Helper to open bulk print modal
+    function openBulkPrintModalWithItem(singleProductId = null) {
+        if (!bulkItemsList) return;
+        bulkItemsList.innerHTML = '';
+        
+        // Populate the modal list with all items
+        catalog.forEach(item => {
+            const isChecked = singleProductId ? (item.id === singleProductId) : true;
+            const defaultQty = singleProductId && item.id === singleProductId ? 1 : 0;
+            
+            const div = document.createElement('div');
+            div.style.display = 'flex';
+            div.style.alignItems = 'center';
+            div.style.justifyContent = 'space-between';
+            div.style.padding = '0.5rem';
+            div.style.borderBottom = '1px solid var(--border-color)';
+            div.style.gap = '1rem';
+            
+            div.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 0.6rem; flex: 1; min-width: 0;">
+                    <input type="checkbox" class="print-select-item" data-id="${item.id}" ${isChecked ? 'checked' : ''} style="width: 18px; height: 18px; accent-color: var(--accent-gold); cursor: pointer;">
+                    <div style="min-width: 0; flex: 1;">
+                        <div style="font-weight: 600; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-primary);">${item.name}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); font-family: monospace;">ID: ${item.id}</div>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.4rem;">
+                    <span style="font-size: 0.8rem; color: var(--text-muted);">Qty:</span>
+                    <input type="number" class="print-qty-item" data-id="${item.id}" value="${isChecked ? 1 : 1}" min="1" max="100" style="width: 60px; padding: 0.3rem; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-secondary); color: var(--text-primary); text-align: center;">
+                </div>
+            `;
+            bulkItemsList.appendChild(div);
+        });
+
+        if (bulkPrintModal) bulkPrintModal.style.display = 'flex';
+    }
+
+    if (btnOpenBulkPrint) {
+        btnOpenBulkPrint.addEventListener('click', () => {
+            openBulkPrintModalWithItem(null);
+        });
+    }
+
+    const closeBulkModal = () => {
+        if (bulkPrintModal) bulkPrintModal.style.display = 'none';
+    };
+
+    if (btnCloseBulkPrint) btnCloseBulkPrint.addEventListener('click', closeBulkModal);
+    if (btnCancelBulkPrint) btnCancelBulkPrint.addEventListener('click', closeBulkModal);
+
+    if (bulkPrintForm) {
+        bulkPrintForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const selectedSize = parseInt(document.getElementById('print-label-size').value) || 150;
+            const showMRP = document.getElementById('print-show-mrp').checked;
+            const showPrice = document.getElementById('print-show-price').checked;
+            
+            const printTasks = [];
+            const rows = bulkItemsList.querySelectorAll('.print-select-item');
+            
+            rows.forEach(checkbox => {
+                if (checkbox.checked) {
+                    const pid = checkbox.getAttribute('data-id');
+                    const qtyInput = bulkItemsList.querySelector(`.print-qty-item[data-id="${pid}"]`);
+                    const qty = parseInt(qtyInput.value) || 1;
+                    const item = catalog.find(p => p.id === pid);
+                    
+                    if (item) {
+                        printTasks.push({ item, qty });
+                    }
                 }
             });
+            
+            if (printTasks.length === 0) {
+                alert('Please select at least one item to print QR codes!');
+                return;
+            }
+            
+            // Build bulk printing page layout
+            const printWindow = window.open('', '_blank', 'width=800,height=600');
+            if (!printWindow) {
+                alert('Pop-up blocked! Please allow pop-ups to print QR codes.');
+                return;
+            }
+            
+            let labelsHtml = '';
+            
+            printTasks.forEach(task => {
+                const customerURL = window.location.origin + '/scan.html?id=' + task.item.id;
+                for (let i = 0; i < task.qty; i++) {
+                    labelsHtml += `
+                        <div class="label-card" style="width: ${selectedSize + 40}px;">
+                            <div class="shop-header">Sri Sai Balaji</div>
+                            <div class="qr-placeholder" data-url="${customerURL}"></div>
+                            <div class="code-id">CODE: ${task.item.id}</div>
+                            ${showMRP ? `<div class="price-line">MRP: ₹${task.item.mrp.toLocaleString('en-IN')}</div>` : ''}
+                            ${showPrice ? `<div class="price-line highlight">Price: ₹${task.item.discountedPrice.toLocaleString('en-IN')}</div>` : ''}
+                        </div>
+                    `;
+                }
+            });
+            
+            printWindow.document.write(`
+                <html>
+                <head>
+                    <title>Bulk QR Labels Print</title>
+                    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>
+                    <style>
+                        body {
+                            font-family: 'Inter', sans-serif;
+                            margin: 10px;
+                            background: #fff;
+                            color: #000;
+                        }
+                        .print-grid {
+                            display: flex;
+                            flex-wrap: wrap;
+                            gap: 15px;
+                            justify-content: flex-start;
+                        }
+                        .label-card {
+                            border: 1px dashed #ccc;
+                            border-radius: 8px;
+                            padding: 10px;
+                            display: flex;
+                            flex-direction: column;
+                            align-items: center;
+                            justify-content: center;
+                            text-align: center;
+                            background: #fff;
+                            page-break-inside: avoid;
+                        }
+                        .shop-header {
+                            font-size: 11px;
+                            font-weight: 800;
+                            letter-spacing: 1px;
+                            text-transform: uppercase;
+                            margin-bottom: 4px;
+                            color: #000;
+                        }
+                        .code-id {
+                            font-size: 10px;
+                            font-family: monospace;
+                            font-weight: 700;
+                            margin: 3px 0;
+                        }
+                        .price-line {
+                            font-size: 10px;
+                            color: #555;
+                            margin: 1px 0;
+                        }
+                        .price-line.highlight {
+                            font-weight: 700;
+                            color: #000;
+                            font-size: 11px;
+                        }
+                        @media print {
+                            body { margin: 0; }
+                            .label-card { border: 1px solid #000; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="print-grid">
+                        ${labelsHtml}
+                    </div>
+                    <script>
+                        window.onload = function() {
+                            const placeholders = document.querySelectorAll('.qr-placeholder');
+                            placeholders.forEach(div => {
+                                const url = div.getAttribute('data-url');
+                                new QRCode(div, {
+                                    text: url,
+                                    width: ${selectedSize},
+                                    height: ${selectedSize},
+                                    correctLevel: QRCode.CorrectLevel.H
+                                });
+                            });
+                            
+                            // Slight delay for QR code rendering before invoking print dialog
+                            setTimeout(() => {
+                                window.print();
+                                setTimeout(() => window.close(), 1000);
+                            }, 500);
+                        };
+                    <\/script>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+            closeBulkModal();
         });
     }
 
