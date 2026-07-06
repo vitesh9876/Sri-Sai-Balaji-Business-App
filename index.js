@@ -1859,7 +1859,7 @@ function initCustomerDirectory() {
         renderCustomerTable();
     }
 
-    async function saveCustomers() {
+    async function saveCustomers(singleCustomer = null) {
         localStorage.setItem('customer_directory', JSON.stringify(customers));
         renderCustomerTable();
 
@@ -1877,13 +1877,15 @@ function initCustomerDirectory() {
         if (supabaseUrl && supabaseKey && window.supabase) {
             try {
                 const client = window.supabase.createClient(supabaseUrl, supabaseKey);
+                const payload = singleCustomer ? singleCustomer : customers;
                 const { error } = await client
                     .from('customer_directory')
-                    .upsert(customers, { onConflict: 'id' });
+                    .upsert(payload, { onConflict: 'id' });
                 
                 if (error) throw error;
             } catch (e) {
                 console.error("Failed to save customers to Supabase:", e);
+                alert("Online Database Sync Error: " + (e.message || e.description || e));
             }
         }
     }
@@ -1903,12 +1905,14 @@ function initCustomerDirectory() {
         if (supabaseUrl && supabaseKey && window.supabase) {
             try {
                 const client = window.supabase.createClient(supabaseUrl, supabaseKey);
-                await client
+                const { error } = await client
                     .from('customer_directory')
                     .delete()
                     .eq('id', id);
+                if (error) throw error;
             } catch (e) {
                 console.error("Failed to delete customer from Supabase:", e);
+                alert("Online Database Delete Error: " + (e.message || e.description || e));
             }
         }
     }
@@ -2018,19 +2022,22 @@ function initCustomerDirectory() {
             const idproof = document.getElementById('form-customer-idproof').value.trim();
             const remarks = document.getElementById('form-customer-remarks').value.trim();
 
+            let savedObj = null;
             if (id) {
                 // Edit
                 const index = customers.findIndex(item => item.id === id);
                 if (index !== -1) {
-                    customers[index] = { id, name, phone, address, idproof, remarks };
+                    savedObj = { id, name, phone, address, idproof, remarks };
+                    customers[index] = savedObj;
                 }
             } else {
                 // Add
                 const newId = `cust-${Date.now()}`;
-                customers.push({ id: newId, name, phone, address, idproof, remarks });
+                savedObj = { id: newId, name, phone, address, idproof, remarks };
+                customers.push(savedObj);
             }
 
-            saveCustomers();
+            saveCustomers(savedObj);
             customerCrudForm.reset();
             customerFormCard.style.display = 'none';
             alert('Customer profile saved successfully!');
