@@ -80,10 +80,10 @@ function initGlobalAdminGate() {
 // Theme Switcher Initialization
 function initThemeToggle() {
     const toggleBtn = document.getElementById('theme-toggle-btn');
-    const mobileToggleBtn = document.getElementById('mobile-theme-toggle-btn');
+    const welcomeToggleBtn = document.getElementById('welcome-theme-toggle-btn');
     
     function applyThemeToButtons(isLight) {
-        [toggleBtn, mobileToggleBtn].forEach(btn => {
+        [toggleBtn, welcomeToggleBtn].forEach(btn => {
             if (!btn) return;
             const textNode = btn.querySelector('.theme-toggle-text');
             const iconNode = btn.querySelector('.theme-toggle-icon');
@@ -130,7 +130,7 @@ function initThemeToggle() {
     };
 
     if (toggleBtn) toggleBtn.addEventListener('click', handleThemeToggle);
-    if (mobileToggleBtn) mobileToggleBtn.addEventListener('click', handleThemeToggle);
+    if (welcomeToggleBtn) welcomeToggleBtn.addEventListener('click', handleThemeToggle);
 }
 
 // Mock simulation of live market feed updates
