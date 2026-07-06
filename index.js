@@ -17,6 +17,7 @@ let trendsChart = null;
 
 // Initialize elements and event listeners
 document.addEventListener('DOMContentLoaded', () => {
+    initGlobalAdminGate();
     initClock();
     initNavigation();
     initPriceSync();
@@ -24,10 +25,100 @@ document.addEventListener('DOMContentLoaded', () => {
     initLoanPredictor();
     initHistoricalChart();
     initItemPricePredictor();
+    initThemeToggle();
     
     // Simulate live updating rates from market feed (runs every 1 second)
     setInterval(simulateLiveRates, 1000);
 });
+
+// Global Admin Authentication Gate
+function initGlobalAdminGate() {
+    const loginGate = document.getElementById('admin-login-gate');
+    const passcodeInp = document.getElementById('gate-passcode');
+    const loginBtn = document.getElementById('btn-gate-login');
+    const logoutBtn = document.getElementById('sidebar-logout-btn');
+
+    function checkAuth() {
+        const loggedIn = localStorage.getItem('furniture_admin_logged') === 'true';
+        if (loggedIn) {
+            loginGate.style.display = 'none';
+        } else {
+            loginGate.style.display = 'flex';
+        }
+    }
+
+    loginBtn.addEventListener('click', () => {
+        if (passcodeInp.value === '1234') {
+            localStorage.setItem('furniture_admin_logged', 'true');
+            passcodeInp.value = '';
+            checkAuth();
+            location.reload(); // reload to ensure all admin states are refreshed
+        } else {
+            alert('Incorrect Admin Passcode! Access Denied.');
+        }
+    });
+
+    passcodeInp.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            loginBtn.click();
+        }
+    });
+
+    logoutBtn.addEventListener('click', () => {
+        localStorage.setItem('furniture_admin_logged', 'false');
+        location.reload();
+    });
+
+    checkAuth();
+}
+
+// Theme Switcher Initialization
+function initThemeToggle() {
+    const toggleBtn = document.getElementById('theme-toggle-btn');
+    const textNode = toggleBtn.querySelector('.theme-toggle-text');
+    const iconNode = toggleBtn.querySelector('.theme-toggle-icon');
+
+    // Read stored preference (default: dark)
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    if (savedTheme === 'light') {
+        document.body.classList.add('light-theme');
+        textNode.textContent = 'Dark Theme';
+        iconNode.textContent = '🌙';
+    } else {
+        document.body.classList.remove('light-theme');
+        textNode.textContent = 'Light Theme';
+        iconNode.textContent = '☀️';
+    }
+
+    toggleBtn.addEventListener('click', () => {
+        const isLight = document.body.classList.toggle('light-theme');
+        if (isLight) {
+            localStorage.setItem('theme', 'light');
+            textNode.textContent = 'Dark Theme';
+            iconNode.textContent = '🌙';
+        } else {
+            localStorage.setItem('theme', 'dark');
+            textNode.textContent = 'Light Theme';
+            iconNode.textContent = '☀️';
+        }
+        
+        // Redraw historical chart for updated grid color palettes
+        if (trendsChart) {
+            const isLightActive = document.body.classList.contains('light-theme');
+            const gridColor = isLightActive ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.05)';
+            const textColor = isLightActive ? '#636366' : '#A0A0AB';
+            const labelColor = isLightActive ? '#000000' : '#FFFFFF';
+            
+            trendsChart.options.scales.x.grid.color = gridColor;
+            trendsChart.options.scales.yGold.grid.color = gridColor;
+            trendsChart.options.scales.x.ticks.color = textColor;
+            trendsChart.options.scales.yGold.ticks.color = textColor;
+            trendsChart.options.scales.ySilver.ticks.color = textColor;
+            trendsChart.options.plugins.legend.labels.color = labelColor;
+            trendsChart.update();
+        }
+    });
+}
 
 // Mock simulation of live market feed updates
 function simulateLiveRates() {
@@ -110,6 +201,17 @@ function initNavigation() {
             item.classList.add('active');
             document.getElementById(`tab-${tabId}`).classList.add('active');
 
+            // Toggle topbar rates and welcome-text visibility based on current active tab (hidden outside welcome on mobile)
+            const topbarRates = document.querySelector('.live-rates-summary');
+            const welcomeText = document.querySelector('.welcome-text');
+            if (tabId === 'welcome') {
+                if (topbarRates) topbarRates.classList.remove('hide-on-mobile');
+                if (welcomeText) welcomeText.classList.remove('hide-on-mobile');
+            } else {
+                if (topbarRates) topbarRates.classList.add('hide-on-mobile');
+                if (welcomeText) welcomeText.classList.add('hide-on-mobile');
+            }
+
             // Redraw chart if tab matches detailed prices
             if (tabId === 'prices' && trendsChart) {
                 setTimeout(() => trendsChart.resize(), 100);
@@ -156,17 +258,17 @@ function initInterestCalc() {
 
     let activePickingTarget = null; // 'start' or 'end'
 
-    const btnStartDisplay = document.getElementById('btn-start-date-picker');
-    const btnEndDisplay = document.getElementById('btn-end-date-picker');
+    const btnStartDisplay = document.getElementById('btn-picker-date-taken');
+    const btnEndDisplay = document.getElementById('btn-picker-date-settlement');
 
-    const modalOverlay = document.getElementById('date-picker-modal');
-    const modalTitle = document.getElementById('picker-modal-title');
-    const btnCloseModal = document.getElementById('btn-close-modal');
-    const btnConfirmPicker = document.getElementById('btn-confirm-picker');
+    const modalOverlay = document.getElementById('picker-modal-taken'); // Fallback default to prevent errors
+    const modalTitle = document.createElement('div'); // Mock to prevent title element selection failure
+    const btnCloseModal = document.getElementById('btn-close-modal-taken');
+    const btnConfirmPicker = document.getElementById('btn-confirm-taken');
 
-    const scrollerDay = document.getElementById('scroller-day');
-    const scrollerMonth = document.getElementById('scroller-month');
-    const scrollerYear = document.getElementById('scroller-year');
+    const scrollerDay = document.getElementById('scroller-taken-day');
+    const scrollerMonth = document.getElementById('scroller-taken-month');
+    const scrollerYear = document.getElementById('scroller-taken-year');
 
     const viewportDay = scrollerDay.parentElement;
     const viewportMonth = scrollerMonth.parentElement;
@@ -326,6 +428,22 @@ function initInterestCalc() {
     setupViewportScrollTracker(viewportMonth, scrollerMonth, 'month', (val) => { curSelectedMonth = val; });
     setupViewportScrollTracker(viewportYear, scrollerYear, 'year', (val) => { curSelectedYear = val; });
 
+    // Initialize separate settlement picker scroll viewport drag/wheel handlers
+    const vDayS = document.getElementById('wheel-settlement-day');
+    const sDayS = document.getElementById('scroller-settlement-day');
+    const vMonthS = document.getElementById('wheel-settlement-month');
+    const sMonthS = document.getElementById('scroller-settlement-month');
+    const vYearS = document.getElementById('wheel-settlement-year');
+    const sYearS = document.getElementById('scroller-settlement-year');
+
+    buildScrollerItems(sDayS, daysArr, 'day');
+    buildScrollerItems(sMonthS, [0,1,2,3,4,5,6,7,8,9,10,11], 'month');
+    buildScrollerItems(sYearS, yearsArr, 'year');
+
+    setupViewportScrollTracker(vDayS, sDayS, 'day', (val) => { curSelectedDay = val; });
+    setupViewportScrollTracker(vMonthS, sMonthS, 'month', (val) => { curSelectedMonth = val; });
+    setupViewportScrollTracker(vYearS, sYearS, 'year', (val) => { curSelectedYear = val; });
+
     // Position wheel viewport helper
     const scrollWheelToValue = (viewport, scroller, value) => {
         const itemHeight = 40;
@@ -361,47 +479,58 @@ function initInterestCalc() {
     // Show modal picker functions
     const openDatePickerModal = (target) => {
         activePickingTarget = target;
-        modalTitle.textContent = target === 'start' ? 'Select Date Taken' : 'Select Settlement Date';
         
+        const activeModal = target === 'start' ? document.getElementById('picker-modal-taken') : document.getElementById('picker-modal-settlement');
         const referenceDate = target === 'start' ? dateTakenVal : dateSettlementVal;
 
         curSelectedDay = referenceDate.getDate();
         curSelectedMonth = referenceDate.getMonth();
         curSelectedYear = referenceDate.getFullYear();
 
-        modalOverlay.classList.add('active');
+        activeModal.classList.add('active');
 
         // Scroll wheels to center active selections
-        scrollWheelToValue(viewportDay, scrollerDay, curSelectedDay);
-        scrollWheelToValue(viewportMonth, scrollerMonth, curSelectedMonth);
-        scrollWheelToValue(viewportYear, scrollerYear, curSelectedYear);
+        if (target === 'start') {
+            scrollWheelToValue(viewportDay, scrollerDay, curSelectedDay);
+            scrollWheelToValue(viewportMonth, scrollerMonth, curSelectedMonth);
+            scrollWheelToValue(viewportYear, scrollerYear, curSelectedYear);
+        } else {
+            const vDayS = document.getElementById('wheel-settlement-day');
+            const sDayS = document.getElementById('scroller-settlement-day');
+            const vMonthS = document.getElementById('wheel-settlement-month');
+            const sMonthS = document.getElementById('scroller-settlement-month');
+            const vYearS = document.getElementById('wheel-settlement-year');
+            const sYearS = document.getElementById('scroller-settlement-year');
+            scrollWheelToValue(vDayS, sDayS, curSelectedDay);
+            scrollWheelToValue(vMonthS, sMonthS, curSelectedMonth);
+            scrollWheelToValue(vYearS, sYearS, curSelectedYear);
+        }
     };
 
     btnStartDisplay.addEventListener('click', () => openDatePickerModal('start'));
     btnEndDisplay.addEventListener('click', () => openDatePickerModal('end'));
 
-    // Close modal
+    // Close modal helper
     const closeModal = () => {
-        modalOverlay.classList.remove('active');
+        document.getElementById('picker-modal-taken').classList.remove('active');
+        document.getElementById('picker-modal-settlement').classList.remove('active');
         activePickingTarget = null;
     };
 
-    btnCloseModal.addEventListener('click', closeModal);
+    document.getElementById('btn-close-modal-taken').addEventListener('click', closeModal);
+    document.getElementById('btn-close-modal-settlement').addEventListener('click', closeModal);
 
-    // Confirm choice
-    btnConfirmPicker.addEventListener('click', () => {
-        const selectedDate = new Date(
-            curSelectedYear,
-            curSelectedMonth,
-            curSelectedDay
-        );
+    // Confirm choice buttons for separate modals
+    document.getElementById('btn-confirm-taken').addEventListener('click', () => {
+        const selectedDate = new Date(curSelectedYear, curSelectedMonth, curSelectedDay);
+        dateTakenVal = selectedDate;
+        updateDisplayLabels();
+        closeModal();
+    });
 
-        if (activePickingTarget === 'start') {
-            dateTakenVal = selectedDate;
-        } else if (activePickingTarget === 'end') {
-            dateSettlementVal = selectedDate;
-        }
-
+    document.getElementById('btn-confirm-settlement').addEventListener('click', () => {
+        const selectedDate = new Date(curSelectedYear, curSelectedMonth, curSelectedDay);
+        dateSettlementVal = selectedDate;
         updateDisplayLabels();
         closeModal();
     });
@@ -605,6 +734,10 @@ function initLoanPredictor() {
 // HISTORICAL CHART (DETAILED PRICES)
 function initHistoricalChart() {
     const ctx = document.getElementById('metalTrendsChart').getContext('2d');
+    const isLightActive = document.body.classList.contains('light-theme');
+    const gridColor = isLightActive ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.05)';
+    const textColor = isLightActive ? '#636366' : '#A0A0AB';
+    const labelColor = isLightActive ? '#000000' : '#FFFFFF';
     
     trendsChart = new Chart(ctx, {
         type: 'line',
@@ -644,10 +777,10 @@ function initHistoricalChart() {
                         color: '#D4AF37'
                     },
                     grid: {
-                        color: 'rgba(255, 255, 255, 0.05)'
+                        color: gridColor
                     },
                     ticks: {
-                        color: '#A0A0AB'
+                        color: textColor
                     }
                 },
                 ySilver: {
@@ -662,22 +795,22 @@ function initHistoricalChart() {
                         drawOnChartArea: false
                     },
                     ticks: {
-                        color: '#A0A0AB'
+                        color: textColor
                     }
                 },
                 x: {
                     grid: {
-                        color: 'rgba(255, 255, 255, 0.05)'
+                        color: gridColor
                     },
                     ticks: {
-                        color: '#A0A0AB'
+                        color: textColor
                     }
                 }
             },
             plugins: {
                 legend: {
                     labels: {
-                        color: '#FFFFFF'
+                        color: labelColor
                     }
                 }
             }
@@ -687,74 +820,629 @@ function initHistoricalChart() {
 
 // ITEMS RETAIL PRICE CALCULATOR
 function initItemPricePredictor() {
-    const btnPredictItem = document.getElementById('btn-predict-item-price');
-    if (!btnPredictItem) return; // Prevent errors since form is cleared for Coming Soon
-    btnPredictItem.addEventListener('click', () => {
-        const weight = parseFloat(document.getElementById('item-weight').value);
-        const rate = parseFloat(document.getElementById('item-metal-price').value);
-        const wastage = parseFloat(document.getElementById('item-wastage').value);
-        const makingCharge = parseFloat(document.getElementById('item-making-charge').value);
+    // Initial catalog of products (stored in local storage to support custom CRUD persistent entries)
+    const defaultCatalog = [
+        {
+            id: 'furn-001',
+            name: 'Royal Teak Wood Sofa (3-Seater)',
+            description: 'Premium grade Burma teak wood with velvet cushioning and hand-crafted designs.',
+            originalPrice: 42000,
+            discountedPrice: 58000,
+            mrp: 75000,
+            image: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&q=80&w=400'
+        },
+        {
+            id: 'furn-002',
+            name: 'Teak Wood Dining Table Set (6-Seater)',
+            description: 'Solid teak wood dining table with 6 cushioned chairs, polished finish.',
+            originalPrice: 32000,
+            discountedPrice: 46000,
+            mrp: 60000,
+            image: 'https://images.unsplash.com/photo-1617806118233-18e1db207f62?auto=format&fit=crop&q=80&w=400'
+        },
+        {
+            id: 'furn-003',
+            name: 'Solid Teak Wood Wardrobe (3-Door)',
+            description: 'Spacious Burma teak wardrobe with multiple drawers, locks, and inner mirror.',
+            originalPrice: 55000,
+            discountedPrice: 72000,
+            mrp: 95000,
+            image: 'https://images.unsplash.com/photo-1595428774223-ef52624120d2?auto=format&fit=crop&q=80&w=400'
+        }
+    ];
 
-        if (!weight || weight <= 0) {
-            alert('Please specify the metal weight.');
+    // Load or initialize catalog database with Supabase cloud database
+    let catalog = [];
+    let supabaseUrl = '';
+    let supabaseKey = '';
+    
+    if (window.SUPABASE_CONFIG && window.SUPABASE_CONFIG.url && window.SUPABASE_CONFIG.url !== 'YOUR_SUPABASE_URL_HERE') {
+        supabaseUrl = window.SUPABASE_CONFIG.url;
+        supabaseKey = window.SUPABASE_CONFIG.anonKey;
+    } else {
+        supabaseUrl = localStorage.getItem('supabase_url') || '';
+        supabaseKey = localStorage.getItem('supabase_key') || '';
+    }
+    let supabaseClient = null;
+
+    if (supabaseUrl && supabaseKey && window.supabase) {
+        try {
+            supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+        } catch(e) {
+            console.error("Failed to initialize Supabase client:", e);
+        }
+    }
+
+    async function syncCatalogFromCloud() {
+        if (supabaseClient) {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('furniture_catalog')
+                    .select('*')
+                    .order('created_at', { ascending: true });
+                
+                if (error) throw error;
+                if (data) {
+                    catalog = data.map(item => ({
+                        id: item.id,
+                        name: item.name,
+                        description: item.description,
+                        originalPrice: item.original_price,
+                        discountedPrice: item.discounted_price,
+                        mrp: item.mrp,
+                        image: item.image
+                    }));
+                    localStorage.setItem('furniture_catalog', JSON.stringify(catalog));
+                    renderProductTable();
+                    return;
+                }
+            } catch(e) {
+                console.error("Failed to sync catalog from Supabase:", e);
+            }
+        }
+
+        // Fallback to local storage loading
+        catalog = JSON.parse(localStorage.getItem('furniture_catalog'));
+        if (!catalog || catalog.length === 0) {
+            catalog = defaultCatalog;
+            localStorage.setItem('furniture_catalog', JSON.stringify(catalog));
+        }
+        renderProductTable();
+    }
+
+    async function saveCatalogToCloud() {
+        localStorage.setItem('furniture_catalog', JSON.stringify(catalog));
+        renderProductTable();
+
+        if (supabaseClient) {
+            try {
+                const dbItems = catalog.map(item => ({
+                    id: item.id,
+                    name: item.name,
+                    description: item.description,
+                    original_price: item.originalPrice,
+                    discounted_price: item.discountedPrice,
+                    mrp: item.mrp,
+                    image: item.image
+                }));
+
+                const { error } = await supabaseClient
+                    .from('furniture_catalog')
+                    .upsert(dbItems, { onConflict: 'id' });
+                
+                if (error) throw error;
+            } catch(e) {
+                console.error("Failed to save catalog to Supabase:", e);
+            }
+        }
+    }
+
+    // Connect form settings to Supabase
+    setTimeout(() => {
+        const dbUrlInp = document.getElementById('db-supabase-url');
+        const dbKeyInp = document.getElementById('db-supabase-key');
+        const btnSaveDb = document.getElementById('btn-save-db-settings');
+
+        if (dbUrlInp) dbUrlInp.value = supabaseUrl;
+        if (dbKeyInp) dbKeyInp.value = supabaseKey;
+
+        if (btnSaveDb) {
+            btnSaveDb.addEventListener('click', () => {
+                const url = dbUrlInp.value.trim();
+                const key = dbKeyInp.value.trim();
+                localStorage.setItem('supabase_url', url);
+                localStorage.setItem('supabase_key', key);
+                alert('Supabase credentials linked successfully! Page will reload to sync.');
+                location.reload();
+            });
+        }
+    }, 100);
+
+    // Run initial sync
+    syncCatalogFromCloud();
+
+    // Admin authentication state
+    let isAdmin = localStorage.getItem('furniture_admin_logged') === 'true';
+
+    // Elements
+    const btnOpenScanner = document.getElementById('btn-open-scanner');
+    const btnCloseScanner = document.getElementById('btn-close-scanner');
+    const btnAdminToggle = document.getElementById('btn-admin-panel-toggle');
+    const btnLoginAuth = document.getElementById('btn-login-auth');
+    const btnOpenAddProduct = document.getElementById('btn-open-add-product');
+    const btnCancelProduct = document.getElementById('btn-cancel-product');
+    
+    const scannerWrapper = document.getElementById('scanner-wrapper');
+    const scanResultContainer = document.getElementById('scan-result-container');
+    const adminLoginCard = document.getElementById('admin-login-card');
+    const adminCatalogManager = document.getElementById('admin-catalog-manager');
+    const productFormCard = document.getElementById('product-form-card');
+    
+    const productCrudForm = document.getElementById('product-crud-form');
+    const adminProductTableBody = document.getElementById('admin-product-table-body');
+    const customerScanModal = document.getElementById('customer-scan-modal');
+    const btnCloseCustomerModal = document.getElementById('btn-close-customer-modal');
+    const customerModalContent = document.getElementById('customer-modal-content');
+
+    let html5QrcodeScanner = null;
+
+    // Toggle admin management display
+    function updateAdminPanelVisibility() {
+        if (isAdmin) {
+            btnAdminToggle.textContent = '🔓 Log Out Admin';
+            adminLoginCard.style.display = 'none';
+            adminCatalogManager.style.display = 'block';
+        } else {
+            btnAdminToggle.textContent = '🔒 Admin Dashboard';
+            adminLoginCard.style.display = 'none';
+            adminCatalogManager.style.display = 'none';
+            productFormCard.style.display = 'none';
+        }
+        renderProductTable();
+    }
+
+    // Toggle button triggers passcode form or logs out
+    btnAdminToggle.addEventListener('click', () => {
+        if (isAdmin) {
+            isAdmin = false;
+            localStorage.setItem('furniture_admin_logged', 'false');
+            alert('Admin logged out successfully.');
+            updateAdminPanelVisibility();
+        } else {
+            // Toggle login card visibility
+            adminLoginCard.style.display = adminLoginCard.style.display === 'none' ? 'block' : 'none';
+        }
+    });
+
+    // Passcode submission check (Default Admin passcode: "1234")
+    btnLoginAuth.addEventListener('click', () => {
+        const passcode = document.getElementById('admin-passcode').value;
+        if (passcode === '1234') {
+            isAdmin = true;
+            localStorage.setItem('furniture_admin_logged', 'true');
+            document.getElementById('admin-passcode').value = '';
+            alert('Admin access granted!');
+            updateAdminPanelVisibility();
+        } else {
+            alert('Incorrect admin passcode! Access denied.');
+        }
+    });
+
+    // Render Product Management Inventory table rows
+    function renderProductTable() {
+        adminProductTableBody.innerHTML = '';
+        const searchInp = document.getElementById('catalog-search-input');
+        const query = searchInp ? searchInp.value.toLowerCase().trim() : '';
+
+        const filteredCatalog = catalog.filter(product => {
+            if (!query) return true;
+            const matchName = product.name.toLowerCase().includes(query);
+            const matchId = product.id.toLowerCase().includes(query);
+            const matchOriginal = product.originalPrice.toString().includes(query);
+            const matchDiscounted = product.discountedPrice.toString().includes(query);
+            const matchMrp = product.mrp.toString().includes(query);
+            return matchName || matchId || matchOriginal || matchDiscounted || matchMrp;
+        });
+
+        filteredCatalog.forEach((product) => {
+            const tr = document.createElement('tr');
+            
+            // Build cell containing label output
+            const labelCellId = `qr-${product.id}`;
+            
+            tr.innerHTML = `
+                <td>
+                    <div style="font-weight: 600;">${product.name}</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">${product.description}</div>
+                </td>
+                <td style="vertical-align: middle;">
+                    <div style="display: flex; align-items: center; gap: 0.4rem;">
+                        <span class="secret-val" id="secret-${product.id}" data-price="₹${product.originalPrice.toLocaleString('en-IN')}" style="filter: blur(4px); cursor: pointer; user-select: none; font-weight: 600; color: #ff453a;">••••••</span>
+                        <button type="button" class="btn-reveal-secret" data-id="${product.id}" style="background: none; border: none; cursor: pointer; padding: 0.2rem; font-size: 1.1rem; line-height: 1;" title="Reveal Price">👁️</button>
+                    </div>
+                </td>
+                <td style="opacity: 0.6; font-size: 0.95rem; font-weight: 500; vertical-align: middle;">₹${product.discountedPrice.toLocaleString('en-IN')}</td>
+                <td style="color: var(--accent-gold); font-weight: 700; vertical-align: middle;">₹${product.mrp.toLocaleString('en-IN')}</td>
+                <td style="text-align: center; vertical-align: middle;">
+                    <div style="display: flex; flex-direction: column; align-items: center; gap: 0.3rem; background: var(--bg-tertiary); padding: 0.5rem; border-radius: 8px; border: 1px solid var(--border-color); width: fit-content; margin: 0 auto;">
+                        <div id="${labelCellId}" style="padding: 0.3rem; background: #fff; display: inline-block; border-radius: 4px;"></div>
+                        <span style="font-size: 0.75rem; color: var(--text-muted); font-family: monospace; font-weight: 600;">${product.id}</span>
+                        <button type="button" class="btn btn-print-qr" data-id="${product.id}" style="padding: 0.2rem 0.5rem; font-size: 0.7rem; background: var(--accent-gold); color: #000; border: none; border-radius: 4px; font-weight: 600; cursor: pointer; margin-top: 0.2rem;">🖨️ Print</button>
+                    </div>
+                </td>
+                <td>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button type="button" class="btn btn-edit" data-id="${product.id}" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; background: var(--bg-tertiary); color: var(--text-primary); border: 1px solid var(--border-color);">Edit</button>
+                        <button type="button" class="btn btn-delete" data-id="${product.id}" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; background: rgba(255, 69, 58, 0.15); color: #ff453a; border: 1px solid #ff453a;">Delete</button>
+                    </div>
+                </td>
+            `;
+            adminProductTableBody.appendChild(tr);
+
+            // Generate label QR code image linked directly to search scan key matches
+            setTimeout(() => {
+                const element = document.getElementById(labelCellId);
+                if (element) {
+                    element.innerHTML = '';
+                    const customerURL = window.location.origin + '/scan.html?id=' + product.id;
+                    new QRCode(element, {
+                        text: customerURL,
+                        width: 50,
+                        height: 50,
+                        correctLevel: QRCode.CorrectLevel.H
+                    });
+                }
+            }, 50);
+        });
+
+        // Add action listeners to dynamically rendered table buttons
+        document.querySelectorAll('.btn-edit').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const pid = e.currentTarget.getAttribute('data-id');
+                const prod = catalog.find(item => item.id === pid);
+                if (prod) {
+                    document.getElementById('form-product-id').value = prod.id;
+                    document.getElementById('form-product-name').value = prod.name;
+                    document.getElementById('form-product-description').value = prod.description;
+                    document.getElementById('form-product-original').value = prod.originalPrice;
+                    document.getElementById('form-product-discounted').value = prod.discountedPrice;
+                    document.getElementById('form-product-mrp').value = prod.mrp;
+                    document.getElementById('form-product-image').value = prod.image;
+                    
+                    document.getElementById('product-form-title').textContent = 'Edit Furniture Product';
+                    productFormCard.style.display = 'block';
+                    productFormCard.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+
+        document.querySelectorAll('.btn-delete').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const pid = e.currentTarget.getAttribute('data-id');
+                if (confirm('Are you sure you want to delete this furniture item?')) {
+                    catalog = catalog.filter(item => item.id !== pid);
+                    saveCatalogToCloud();
+
+                    if (supabaseClient) {
+                        try {
+                            const { error } = await supabaseClient
+                                .from('furniture_catalog')
+                                .delete()
+                                .eq('id', pid);
+                            if (error) throw error;
+                        } catch(err) {
+                            console.error("Failed to delete from Supabase:", err);
+                        }
+                    }
+                }
+            });
+        });
+
+        // Click handler to reveal secret price and auto-hide in 5 seconds
+        document.querySelectorAll('.btn-reveal-secret').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const pid = e.currentTarget.getAttribute('data-id');
+                const span = document.getElementById(`secret-${pid}`);
+                if (span) {
+                    const price = span.getAttribute('data-price');
+                    const isRevealed = span.style.filter === 'none';
+                    
+                    if (isRevealed) {
+                        // Manually hide
+                        span.textContent = '••••••';
+                        span.style.filter = 'blur(4px)';
+                        e.currentTarget.textContent = '👁️';
+                        if (span.dataset.timerId) {
+                            clearTimeout(parseInt(span.dataset.timerId));
+                            delete span.dataset.timerId;
+                        }
+                    } else {
+                        // Reveal
+                        span.textContent = price;
+                        span.style.filter = 'none';
+                        e.currentTarget.textContent = '🙈';
+                        
+                        if (span.dataset.timerId) {
+                            clearTimeout(parseInt(span.dataset.timerId));
+                        }
+                        
+                        const timerId = setTimeout(() => {
+                            span.textContent = '••••••';
+                            span.style.filter = 'blur(4px)';
+                            e.currentTarget.textContent = '👁️';
+                            delete span.dataset.timerId;
+                        }, 5000);
+                        
+                        span.dataset.timerId = timerId;
+                    }
+                }
+            });
+        });
+
+        // Print QR code listener
+        document.querySelectorAll('.btn-print-qr').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const pid = e.currentTarget.getAttribute('data-id');
+                const prod = catalog.find(item => item.id === pid);
+                if (prod) {
+                    const printWindow = window.open('', '_blank', 'width=450,height=450');
+                    const qrContainerHtml = document.getElementById(`qr-${prod.id}`).innerHTML;
+                    printWindow.document.write(`
+                        <html>
+                        <head>
+                            <title>Print QR - ${prod.name}</title>
+                            <style>
+                                body {
+                                    font-family: 'Inter', sans-serif;
+                                    display: flex;
+                                    flex-direction: column;
+                                    align-items: center;
+                                    justify-content: center;
+                                    height: 100vh;
+                                    margin: 0;
+                                    text-align: center;
+                                }
+                                .label-card {
+                                    padding: 5px;
+                                    display: inline-block;
+                                }
+                                .shop-header {
+                                    font-size: 16px;
+                                    font-weight: 700;
+                                    margin-bottom: 2px;
+                                    letter-spacing: 1.5px;
+                                    text-transform: uppercase;
+                                    color: #000;
+                                }
+                                .qr-box {
+                                    margin: 2px 0;
+                                }
+                                .qr-box img {
+                                    display: block;
+                                    margin: 0 auto;
+                                    width: 150px;
+                                    height: 150px;
+                                }
+                                .code-id {
+                                    font-size: 14px;
+                                    font-family: monospace;
+                                    font-weight: 700;
+                                    margin-top: 2px;
+                                }
+                            </style>
+                        </head>
+                        <body>
+                            <div class="label-card">
+                                <div class="shop-header">Sri Sai Balaji</div>
+                                <div class="qr-box">${qrContainerHtml}</div>
+                                <div class="code-id">CODE: ${prod.id}</div>
+                            </div>
+                            <script>
+                                window.onload = function() {
+                                    // Scale QR image in print document
+                                    const img = document.querySelector('.qr-box img');
+                                    if (img) {
+                                        img.style.width = '150px';
+                                        img.style.height = '150px';
+                                    }
+                                    window.print();
+                                    setTimeout(() => window.close(), 500);
+                                };
+                            <\/script>
+                        </body>
+                        </html>
+                    `);
+                    printWindow.document.close();
+                }
+            });
+        });
+    }
+
+    // Attach search event listener
+    const searchInput = document.getElementById('catalog-search-input');
+    if (searchInput) {
+        searchInput.addEventListener('input', renderProductTable);
+    }
+
+    // CRUD Product form submission handler
+    productCrudForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const pid = document.getElementById('form-product-id').value;
+        const name = document.getElementById('form-product-name').value;
+        const desc = document.getElementById('form-product-description').value;
+        const originalPrice = parseInt(document.getElementById('form-product-original').value);
+        const discountedPrice = parseInt(document.getElementById('form-product-discounted').value);
+        const mrp = parseInt(document.getElementById('form-product-mrp').value);
+        let image = document.getElementById('form-product-image').value;
+
+        if (!image) {
+            image = 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&q=80&w=400';
+        }
+
+        if (pid) {
+            // Edit existing item
+            const index = catalog.findIndex(item => item.id === pid);
+            if (index !== -1) {
+                catalog[index] = { id: pid, name, description: desc, originalPrice, discountedPrice, mrp, image };
+            }
+        } else {
+            // Add new item
+            const newId = `furn-${Date.now()}`;
+            catalog.push({ id: newId, name, description: desc, originalPrice, discountedPrice, mrp, image });
+        }
+
+        saveCatalogToCloud();
+        productCrudForm.reset();
+        productFormCard.style.display = 'none';
+        alert('Product details saved successfully!');
+    });
+
+    btnOpenAddProduct.addEventListener('click', () => {
+        document.getElementById('form-product-id').value = '';
+        productCrudForm.reset();
+        document.getElementById('product-form-title').textContent = 'Add New Furniture Product';
+        productFormCard.style.display = 'block';
+    });
+
+    btnCancelProduct.addEventListener('click', () => {
+        productFormCard.style.display = 'none';
+    });
+
+    // SCANNER HANDLERS
+    btnOpenScanner.addEventListener('click', () => {
+        scannerWrapper.style.display = 'block';
+        scanResultContainer.style.display = 'none';
+        scannerWrapper.scrollIntoView({ behavior: 'smooth' });
+
+        // Start HTML5 Camera-based scanner
+        if (!html5QrcodeScanner) {
+            html5QrcodeScanner = new Html5Qrcode("interactive-reader");
+        }
+
+        html5QrcodeScanner.start(
+            { facingMode: "environment" },
+            {
+                fps: 60,
+                qrbox: (width, height) => {
+                    const minDim = Math.min(width, height);
+                    return { width: Math.floor(minDim * 0.75), height: Math.floor(minDim * 0.75) };
+                },
+                aspectRatio: 1.0,
+                experimentalFeatures: {
+                    useBarCodeDetectorIfSupported: true
+                }
+            },
+            onScanSuccess,
+            onScanFailure
+        ).catch(err => {
+            alert(`Unable to open camera feed: ${err}. Defaulting to mock demo scanner!`);
+            // Mock Fallback scanner options for headless testing
+            const scanTargetId = prompt("Demo Scanner Fallback: Enter barcode/QR code text (e.g. furn-001):");
+            if (scanTargetId) {
+                onScanSuccess(scanTargetId);
+            }
+        });
+    });
+
+    function stopScannerFeed() {
+        if (html5QrcodeScanner && html5QrcodeScanner.isScanning) {
+            html5QrcodeScanner.stop().then(() => {
+                scannerWrapper.style.display = 'none';
+            }).catch(err => console.error("Error stopping scanner feed:", err));
+        } else {
+            scannerWrapper.style.display = 'none';
+        }
+    }
+
+    btnCloseScanner.addEventListener('click', stopScannerFeed);
+
+    function onScanSuccess(decodedText) {
+        stopScannerFeed();
+        
+        let resolvedId = decodedText;
+        try {
+            const urlObj = new URL(decodedText);
+            const idParam = urlObj.searchParams.get('id');
+            if (idParam) resolvedId = idParam;
+        } catch(e) {
+            // Not a URL, use raw string
+        }
+        
+        // Find product matches inside catalog
+        const matchProduct = catalog.find(item => item.id.trim() === resolvedId.trim());
+        if (!matchProduct) {
+            alert(`No matching item in catalog found for scanned key: "${decodedText}"`);
             return;
         }
-        if (!rate || rate <= 0) {
-            alert('Please specify the metal rate.');
-            return;
-        }
 
-        // Metal Cost including wastage
-        const effectiveWeight = weight * (1 + (wastage / 100));
-        const metalCost = effectiveWeight * rate;
-
-        // Making charges
-        const totalMaking = makingCharge * weight;
-
-        // Subtotal before tax
-        const subtotal = metalCost + totalMaking;
-
-        // GST (Standard jewelry GST is 3%)
-        const gst = subtotal * 0.03;
-
-        // Final Payable retail price
-        const finalRetailPrice = subtotal + gst;
-
-        const resultCard = document.getElementById('item-price-result');
-        resultCard.innerHTML = `
-            <div class="statement-card">
-                <h3 class="statement-title">Predicted Retail Valuation</h3>
-                <div class="statement-grid">
-                    <div class="statement-item">
-                        <span class="label">Net Weight</span>
-                        <span class="value">${weight.toFixed(3)} grams</span>
-                    </div>
-                    <div class="statement-item">
-                        <span class="label">Effective Weight (+Wastage)</span>
-                        <span class="value">${effectiveWeight.toFixed(3)} grams</span>
-                    </div>
-                    <div class="statement-item">
-                        <span class="label">Metal Value</span>
-                        <span class="value">₹${Math.round(metalCost).toLocaleString('en-IN')}</span>
-                    </div>
-                    <div class="statement-item">
-                        <span class="label">Making Cost</span>
-                        <span class="value">₹${Math.round(totalMaking).toLocaleString('en-IN')}</span>
-                    </div>
-                    <div class="statement-item">
-                        <span class="label">Taxable Subtotal</span>
-                        <span class="value">₹${Math.round(subtotal).toLocaleString('en-IN')}</span>
-                    </div>
-                    <div class="statement-item">
-                        <span class="label">GST (3%)</span>
-                        <span class="value">₹${Math.round(gst).toLocaleString('en-IN')}</span>
-                    </div>
-                    <div class="statement-item total-payable" style="grid-column: span 2;">
-                        <span class="label">Estimated Retail Billing Price</span>
-                        <span class="value">₹${Math.round(finalRetailPrice).toLocaleString('en-IN')}</span>
+        if (isAdmin) {
+            // Admin scan result: reveals Secret Original Cost price
+            scanResultContainer.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.8rem; margin-bottom: 1rem;">
+                    <h3 style="color: var(--accent-gold);">Scan Result (Admin Mode)</h3>
+                    <button type="button" class="btn" id="btn-clear-scan" style="background: var(--bg-tertiary); padding: 0.3rem 0.8rem; font-size: 0.8rem;">Clear</button>
+                </div>
+                <div style="display: flex; gap: 1.5rem; flex-wrap: wrap;">
+                    <img src="${matchProduct.image}" alt="${matchProduct.name}" style="width: 120px; height: 120px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-color);">
+                    <div style="flex: 1; min-width: 200px;">
+                        <h4 style="font-size: 1.2rem; margin-bottom: 0.4rem;">${matchProduct.name}</h4>
+                        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">${matchProduct.description}</p>
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; background: var(--bg-tertiary); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color);">
+                            <div>
+                                <span class="label" style="font-size: 0.7rem; color: #ff453a; text-transform: uppercase; font-weight: 600;">Secret Cost</span>
+                                <div style="font-size: 1.2rem; font-weight: 800; color: #ff453a;">₹${matchProduct.originalPrice.toLocaleString('en-IN')}</div>
+                            </div>
+                            <div>
+                                <span class="label" style="font-size: 0.7rem; color: var(--success); text-transform: uppercase; font-weight: 600;">Selling Price</span>
+                                <div style="font-size: 1.2rem; font-weight: 800; color: var(--success);">₹${matchProduct.discountedPrice.toLocaleString('en-IN')}</div>
+                            </div>
+                            <div>
+                                <span class="label" style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">MRP Price</span>
+                                <div style="font-size: 1.2rem; font-weight: 800; color: var(--text-primary); text-decoration: line-through; opacity: 0.6;">₹${matchProduct.mrp.toLocaleString('en-IN')}</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-        `;
+            `;
+            scanResultContainer.style.display = 'block';
+            scanResultContainer.scrollIntoView({ behavior: 'smooth' });
+
+            document.getElementById('btn-clear-scan').addEventListener('click', () => {
+                scanResultContainer.style.display = 'none';
+            });
+        } else {
+            // General Customer Scan result: displays only Name, Image, Selling price, and shop name in overlay modal
+            customerModalContent.innerHTML = `
+                <div style="margin: 1.5rem 0;">
+                    <img src="${matchProduct.image}" alt="${matchProduct.name}" style="width: 100%; max-height: 250px; object-fit: cover; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 1rem;">
+                    <h3 style="font-size: 1.4rem; color: var(--text-primary); margin-bottom: 0.5rem;">${matchProduct.name}</h3>
+                    <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.4; margin-bottom: 1.5rem;">${matchProduct.description}</p>
+                    <div style="background: var(--bg-tertiary); padding: 1.2rem; border-radius: 10px; display: flex; justify-content: space-around; align-items: center; border: 1px solid var(--border-color);">
+                        <div>
+                            <span class="label" style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; display: block; margin-bottom: 0.2rem;">Retail Price</span>
+                            <span style="font-size: 1.6rem; font-weight: 800; color: var(--accent-gold);">₹${matchProduct.discountedPrice.toLocaleString('en-IN')}</span>
+                        </div>
+                        <div style="width: 1px; height: 30px; background: var(--border-color);"></div>
+                        <div>
+                            <span class="label" style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; display: block; margin-bottom: 0.2rem;">MRP</span>
+                            <span style="font-size: 1.2rem; font-weight: 600; color: var(--text-muted); text-decoration: line-through; opacity: 0.7;">₹${matchProduct.mrp.toLocaleString('en-IN')}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            customerScanModal.style.display = 'flex';
+        }
+    }
+
+    function onScanFailure(error) {
+        // Silent logging to prevent console pollution
+    }
+
+    btnCloseCustomerModal.addEventListener('click', () => {
+        customerScanModal.style.display = 'none';
     });
+
+    // Run initial setup checks
+    updateAdminPanelVisibility();
 }
+

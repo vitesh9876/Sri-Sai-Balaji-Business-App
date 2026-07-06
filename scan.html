@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sri Sai Balaji - Furniture Details</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- QR Scanner Script -->
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <!-- Supabase JS Client library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase_config.js"></script>
+    <style>
+        :root {
+            --bg-primary: #0F0F11;
+            --bg-secondary: #16161A;
+            --bg-tertiary: #202026;
+            --accent-gold: #D4AF37;
+            --accent-gold-gradient: linear-gradient(135deg, #F3E5AB 0%, #D4AF37 50%, #AA7C11 100%);
+            --text-primary: #FFFFFF;
+            --text-muted: #A0A0AB;
+            --border-color: #2D2D35;
+            --success: #10B981;
+            --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+            --border-radius: 16px;
+            --font-heading: 'Cinzel', serif;
+            --font-body: 'Inter', sans-serif;
+        }
+
+        /* Auto light theme matching system preference or body class */
+        @media (prefers-color-scheme: light) {
+            :root {
+                --bg-primary: #F2F2F7;
+                --bg-secondary: #FFFFFF;
+                --bg-tertiary: #E5E5EA;
+                --accent-gold: #B38600;
+                --accent-gold-gradient: linear-gradient(135deg, #E5C158 0%, #B38600 50%, #7D5E00 100%);
+                --text-primary: #000000;
+                --text-muted: #636366;
+                --border-color: #D1D1D6;
+                --card-shadow: 0 8px 24px 0 rgba(0, 0, 0, 0.05);
+            }
+        }
+
+        body.light-theme {
+            --bg-primary: #F2F2F7;
+            --bg-secondary: #FFFFFF;
+            --bg-tertiary: #E5E5EA;
+            --accent-gold: #B38600;
+            --accent-gold-gradient: linear-gradient(135deg, #E5C158 0%, #B38600 50%, #7D5E00 100%);
+            --text-primary: #000000;
+            --text-muted: #636366;
+            --border-color: #D1D1D6;
+            --card-shadow: 0 8px 24px 0 rgba(0, 0, 0, 0.05);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: var(--font-body);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 1.5rem;
+        }
+
+        .customer-container {
+            width: 100%;
+            max-width: 500px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            padding: 2rem 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .header {
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .logo {
+            width: 50px;
+            height: 50px;
+            background: var(--accent-gold-gradient);
+            border-radius: 50%;
+            margin: 0 auto 0.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-heading);
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #000;
+            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.2);
+        }
+
+        .shop-name {
+            font-family: var(--font-heading);
+            color: var(--accent-gold);
+            font-size: 1.6rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .shop-subtitle {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-top: 0.2rem;
+        }
+
+        .product-image {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 1.5rem;
+        }
+
+        .product-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .product-desc {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin-bottom: 1.5rem;
+        }
+
+        .price-box {
+            background: var(--bg-tertiary);
+            padding: 1.2rem;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            border: 1px solid var(--border-color);
+            margin-bottom: 2rem;
+        }
+
+        .price-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-weight: 600;
+            display: block;
+            margin-bottom: 0.3rem;
+        }
+
+        .price-val {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--accent-gold);
+        }
+
+        .mrp-val {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-decoration: line-through;
+            opacity: 0.7;
+        }
+
+        .btn-scan-another {
+            display: block;
+            width: 100%;
+            padding: 1rem;
+            border-radius: 10px;
+            border: 1px solid var(--accent-gold);
+            background: transparent;
+            color: var(--accent-gold);
+            font-family: var(--font-body);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            margin-bottom: 1rem;
+        }
+
+        .btn-scan-another:hover {
+            background: var(--accent-gold);
+            color: #000;
+        }
+
+        .scanner-card {
+            border: 1px dashed var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            margin-top: 1.5rem;
+            background: var(--bg-tertiary);
+        }
+
+        .error-message {
+            text-align: center;
+            padding: 2rem 0;
+        }
+
+        .error-title {
+            font-size: 1.2rem;
+            color: var(--accent-gold);
+            margin-bottom: 0.5rem;
+        }
+
+        .theme-switch {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <button class="theme-switch" onclick="toggleTheme()">☀️ Theme</button>
+
+    <div class="customer-container">
+        <!-- Logo & Header -->
+        <div class="header">
+            <div class="logo">SBJ</div>
+            <h1 class="shop-name">Sri Sai Balaji</h1>
+            <p class="shop-subtitle">Furniture & Jewelry</p>
+        </div>
+
+        <div id="loading-view" style="text-align: center; padding: 2rem 0;">
+            <p style="color: var(--text-muted);">Fetching item details...</p>
+        </div>
+
+        <!-- Product Details Display -->
+        <div id="product-view" style="display: none;">
+            <img id="item-image" src="" alt="Product Image" class="product-image">
+            <h2 id="item-title" class="product-title"></h2>
+            <p id="item-desc" class="product-desc"></p>
+            
+            <div class="price-box" style="justify-content: center;">
+                <div style="text-align: center;">
+                    <span class="price-label">Original Price</span>
+                    <span id="item-price" class="price-val"></span>
+                </div>
+            </div>
+
+            <button class="btn-scan-another" onclick="toggleScanner()">📷 Scan Another Item</button>
+        </div>
+
+        <!-- Camera Scanner Feed -->
+        <div id="scanner-view" style="display: none;" class="scanner-card">
+            <h3 style="margin-bottom: 1rem; font-size: 1.1rem;">Scan QR/Barcode</h3>
+            <div id="reader" style="width: 100%; border-radius: 8px; overflow: hidden; background: #000; margin-bottom: 1rem;"></div>
+            <button class="btn-scan-another" style="margin-bottom: 0;" onclick="toggleScanner()">Cancel Scan</button>
+        </div>
+
+        <!-- Error Screen -->
+        <div id="error-view" style="display: none;" class="error-message">
+            <div class="error-title">No Product Scanned</div>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">
+                Please scan an item QR code, or click below to launch the camera scanner.
+            </p>
+            <button class="btn-scan-another" onclick="toggleScanner()">📷 Open Camera Scanner</button>
+        </div>
+    </div>
+
+    <script>
+        const defaultCatalog = [
+            {
+                id: 'furn-001',
+                name: 'Premium Teak Wood Sofa Set (3+1+1)',
+                description: 'Elegant hand-carved sofa set made from seasoned Nilambur teak wood with royal velvet cushions.',
+                originalPrice: 42000,
+                discountedPrice: 58000,
+                mrp: 75000,
+                image: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&q=80&w=400'
+            },
+            {
+                id: 'furn-002',
+                name: 'Modern King Size Storage Bed',
+                description: 'Premium plywood hydraulic storage bed finished with teak wood veneer and upholstered headboard.',
+                originalPrice: 38000,
+                discountedPrice: 49500,
+                mrp: 68000,
+                image: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&q=80&w=400'
+            },
+            {
+                id: 'furn-003',
+                name: 'Solid Teak Wood Wardrobe (3-Door)',
+                description: 'Spacious Burma teak wardrobe with multiple drawers, locks, and inner mirror.',
+                originalPrice: 55000,
+                discountedPrice: 72000,
+                mrp: 95000,
+                image: 'https://images.unsplash.com/photo-1595428774223-ef52624120d2?auto=format&fit=crop&q=80&w=400'
+            }
+        ];
+
+        let html5QrcodeScanner = null;
+
+        function toggleTheme() {
+            document.body.classList.toggle('light-theme');
+        }
+
+        // Get parameter from URL
+        function getQueryParam(param) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param);
+        }
+
+        async function loadProductDetails(productId) {
+            document.getElementById('loading-view').style.display = 'block';
+            document.getElementById('product-view').style.display = 'none';
+            document.getElementById('error-view').style.display = 'none';
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const nameParam = urlParams.get('name');
+
+            let itemImage = '';
+            let itemTitle = '';
+            let itemDesc = '';
+            let itemPrice = 0;
+
+            if (nameParam) {
+                // If details are present directly in URL parameters (e.g. cross-device scanning)
+                itemImage = urlParams.get('img') || 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&q=80&w=400';
+                itemTitle = nameParam;
+                itemDesc = urlParams.get('desc') || '';
+                itemPrice = parseInt(urlParams.get('orig')) || parseInt(urlParams.get('price')) || 0;
+            } else if (productId) {
+                // Try fetching directly from Supabase first
+                let supabaseUrl = '';
+                let supabaseKey = '';
+                
+                if (window.SUPABASE_CONFIG && window.SUPABASE_CONFIG.url && window.SUPABASE_CONFIG.url !== 'YOUR_SUPABASE_URL_HERE') {
+                    supabaseUrl = window.SUPABASE_CONFIG.url;
+                    supabaseKey = window.SUPABASE_CONFIG.anonKey;
+                } else {
+                    supabaseUrl = localStorage.getItem('supabase_url') || '';
+                    supabaseKey = localStorage.getItem('supabase_key') || '';
+                }
+
+                if (supabaseUrl && supabaseKey && window.supabase) {
+                    try {
+                        const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+                        const { data, error } = await supabaseClient
+                            .from('furniture_catalog')
+                            .select('id, name, description, original_price, discounted_price, mrp, image')
+                            .eq('id', productId)
+                            .maybeSingle();
+
+                        if (!error && data) {
+                            itemImage = data.image;
+                            itemTitle = data.name;
+                            itemDesc = data.description;
+                            itemPrice = data.original_price; // Show original price
+                        }
+                    } catch (e) {
+                        console.error("Supabase direct query failed:", e);
+                    }
+                }
+
+                // Fallback to local storage if not retrieved from Supabase
+                if (!itemTitle) {
+                    let catalog = JSON.parse(localStorage.getItem('furniture_catalog')) || defaultCatalog;
+                    const product = catalog.find(item => item.id.trim().toLowerCase() === productId.trim().toLowerCase());
+                    if (product) {
+                        itemImage = product.image;
+                        itemTitle = product.name;
+                        itemDesc = product.description;
+                        itemPrice = product.originalPrice; // Only original price
+                    }
+                }
+            }
+
+            if (itemTitle) {
+                document.getElementById('item-image').src = itemImage;
+                document.getElementById('item-title').textContent = itemTitle;
+                document.getElementById('item-desc').textContent = itemDesc;
+                document.getElementById('item-price').textContent = '₹' + itemPrice.toLocaleString('en-IN');
+
+                document.getElementById('loading-view').style.display = 'none';
+                document.getElementById('product-view').style.display = 'block';
+            } else {
+                document.getElementById('loading-view').style.display = 'none';
+                document.getElementById('error-view').style.display = 'block';
+                document.querySelector('.error-title').textContent = 'Product Not Found';
+            }
+        }
+
+        // Scanner management
+        function toggleScanner() {
+            const scannerView = document.getElementById('scanner-view');
+            const productView = document.getElementById('product-view');
+            const errorView = document.getElementById('error-view');
+
+            if (scannerView.style.display === 'none') {
+                scannerView.style.display = 'block';
+                productView.style.display = 'none';
+                errorView.style.display = 'none';
+
+                if (!html5QrcodeScanner) {
+                    html5QrcodeScanner = new Html5Qrcode("reader");
+                }
+
+                html5QrcodeScanner.start(
+                    { facingMode: "environment" },
+                    {
+                        fps: 60,
+                        qrbox: (width, height) => {
+                            const minDim = Math.min(width, height);
+                            return { width: Math.floor(minDim * 0.75), height: Math.floor(minDim * 0.75) };
+                        },
+                        aspectRatio: 1.0,
+                        experimentalFeatures: {
+                            useBarCodeDetectorIfSupported: true
+                        }
+                    },
+                    onScanSuccess,
+                    onScanFailure
+                ).catch(err => {
+                    alert(`Camera error: ${err}. Launching fallback prompt.`);
+                    const mockId = prompt("Enter barcode/QR code content manually:");
+                    if (mockId) {
+                        onScanSuccess(mockId);
+                    } else {
+                        toggleScanner();
+                    }
+                });
+            } else {
+                if (html5QrcodeScanner && html5QrcodeScanner.isScanning) {
+                    html5QrcodeScanner.stop().then(() => {
+                        scannerView.style.display = 'none';
+                        // Restore previous view
+                        const currentId = getQueryParam('id');
+                        if (currentId) {
+                            loadProductDetails(currentId);
+                        } else {
+                            errorView.style.display = 'block';
+                        }
+                    });
+                } else {
+                    scannerView.style.display = 'none';
+                    const currentId = getQueryParam('id');
+                    if (currentId) {
+                        loadProductDetails(currentId);
+                    } else {
+                        errorView.style.display = 'block';
+                    }
+                }
+            }
+        }
+
+        function onScanSuccess(decodedText) {
+            if (html5QrcodeScanner && html5QrcodeScanner.isScanning) {
+                html5QrcodeScanner.stop().then(() => {
+                    document.getElementById('scanner-view').style.display = 'none';
+                    // Check if URL
+                    let resolvedId = decodedText;
+                    try {
+                        const urlObj = new URL(decodedText);
+                        const idParam = urlObj.searchParams.get('id');
+                        if (idParam) resolvedId = idParam;
+                    } catch(e) {
+                        // Not a URL, use raw string
+                    }
+                    // Update URL search query
+                    history.pushState(null, '', '?id=' + resolvedId);
+                    loadProductDetails(resolvedId);
+                });
+            }
+        }
+
+        function onScanFailure(error) {
+            // Silent failure
+        }
+
+        // On Load Init
+        window.addEventListener('DOMContentLoaded', () => {
+            const initialId = getQueryParam('id');
+            loadProductDetails(initialId);
+        });
+    </script>
+</body>
+</html>
