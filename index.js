@@ -38,6 +38,7 @@ function initGlobalAdminGate() {
     const passcodeInp = document.getElementById('gate-passcode');
     const loginBtn = document.getElementById('btn-gate-login');
     const logoutBtn = document.getElementById('sidebar-logout-btn');
+    const mobileLogoutBtn = document.getElementById('mobile-logout-btn');
 
     function checkAuth() {
         const loggedIn = localStorage.getItem('furniture_admin_logged') === 'true';
@@ -65,10 +66,13 @@ function initGlobalAdminGate() {
         }
     });
 
-    logoutBtn.addEventListener('click', () => {
+    const handleLogout = () => {
         localStorage.setItem('furniture_admin_logged', 'false');
         location.reload();
-    });
+    };
+
+    if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
+    if (mobileLogoutBtn) mobileLogoutBtn.addEventListener('click', handleLogout);
 
     checkAuth();
 }
@@ -76,32 +80,37 @@ function initGlobalAdminGate() {
 // Theme Switcher Initialization
 function initThemeToggle() {
     const toggleBtn = document.getElementById('theme-toggle-btn');
-    const textNode = toggleBtn.querySelector('.theme-toggle-text');
-    const iconNode = toggleBtn.querySelector('.theme-toggle-icon');
+    const mobileToggleBtn = document.getElementById('mobile-theme-toggle-btn');
+    
+    function applyThemeToButtons(isLight) {
+        [toggleBtn, mobileToggleBtn].forEach(btn => {
+            if (!btn) return;
+            const textNode = btn.querySelector('.theme-toggle-text');
+            const iconNode = btn.querySelector('.theme-toggle-icon');
+            if (isLight) {
+                textNode.textContent = 'Dark Theme';
+                iconNode.textContent = '🌙';
+            } else {
+                textNode.textContent = 'Light Theme';
+                iconNode.textContent = '☀️';
+            }
+        });
+    }
 
     // Read stored preference (default: dark)
     const savedTheme = localStorage.getItem('theme') || 'dark';
     if (savedTheme === 'light') {
         document.body.classList.add('light-theme');
-        textNode.textContent = 'Dark Theme';
-        iconNode.textContent = '🌙';
+        applyThemeToButtons(true);
     } else {
         document.body.classList.remove('light-theme');
-        textNode.textContent = 'Light Theme';
-        iconNode.textContent = '☀️';
+        applyThemeToButtons(false);
     }
 
-    toggleBtn.addEventListener('click', () => {
+    const handleThemeToggle = () => {
         const isLight = document.body.classList.toggle('light-theme');
-        if (isLight) {
-            localStorage.setItem('theme', 'light');
-            textNode.textContent = 'Dark Theme';
-            iconNode.textContent = '🌙';
-        } else {
-            localStorage.setItem('theme', 'dark');
-            textNode.textContent = 'Light Theme';
-            iconNode.textContent = '☀️';
-        }
+        localStorage.setItem('theme', isLight ? 'light' : 'dark');
+        applyThemeToButtons(isLight);
         
         // Redraw historical chart for updated grid color palettes
         if (trendsChart) {
@@ -118,7 +127,10 @@ function initThemeToggle() {
             trendsChart.options.plugins.legend.labels.color = labelColor;
             trendsChart.update();
         }
-    });
+    };
+
+    if (toggleBtn) toggleBtn.addEventListener('click', handleThemeToggle);
+    if (mobileToggleBtn) mobileToggleBtn.addEventListener('click', handleThemeToggle);
 }
 
 // Mock simulation of live market feed updates
@@ -189,6 +201,22 @@ function initClock() {
 function initNavigation() {
     const navItems = document.querySelectorAll('.nav-item');
     const tabContents = document.querySelectorAll('.tab-content');
+    const mobileToggleBtn = document.getElementById('mobile-menu-toggle-btn');
+    const navMenu = document.querySelector('.nav-menu');
+    const activeTabTitle = document.getElementById('mobile-active-tab-title');
+
+    if (mobileToggleBtn && navMenu) {
+        mobileToggleBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            navMenu.classList.toggle('open');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!navMenu.contains(e.target) && !mobileToggleBtn.contains(e.target)) {
+                navMenu.classList.remove('open');
+            }
+        });
+    }
 
     navItems.forEach(item => {
         item.addEventListener('click', () => {
@@ -201,6 +229,14 @@ function initNavigation() {
             // Activate current tab/nav item
             item.classList.add('active');
             document.getElementById(`tab-${tabId}`).classList.add('active');
+
+            if (navMenu) {
+                navMenu.classList.remove('open');
+            }
+
+            if (activeTabTitle) {
+                activeTabTitle.innerHTML = item.innerHTML;
+            }
 
             // Toggle topbar rates and welcome-text visibility based on current active tab (hidden outside welcome on mobile)
             const topbarRates = document.querySelector('.live-rates-summary');
