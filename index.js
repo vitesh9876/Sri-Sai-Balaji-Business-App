@@ -25,6 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initLoanPredictor();
     initHistoricalChart();
     initItemPricePredictor();
+    initCustomerDirectory();
     initThemeToggle();
     
     // Simulate live updating rates from market feed (runs every 1 second)
@@ -1743,5 +1744,268 @@ function initItemPricePredictor() {
 
     // Run initial setup checks
     updateAdminPanelVisibility();
+}
+
+// TAB 6: Customer Directory Controller Setup
+function initCustomerDirectory() {
+    let customers = [];
+    
+    const defaultCustomers = [
+        {
+            id: 'cust-1',
+            name: 'Rajesh Varma',
+            phone: '9848022338',
+            address: 'Door No: 40-1-5, Benz Circle, Vijayawada, AP',
+            idproof: 'https://via.placeholder.com/300?text=Aadhaar+Proof',
+            remarks: 'Prefers gold scheme, regular buyer'
+        },
+        {
+            id: 'cust-2',
+            name: 'K. Lakshmi Prasad',
+            phone: '7702819340',
+            address: 'NTR Circle, Patamata, Vijayawada, AP',
+            idproof: '',
+            remarks: 'Interested in jewelry loan schemes'
+        }
+    ];
+
+    const customerSearchInput = document.getElementById('customer-search-input');
+    const btnOpenAddCustomer = document.getElementById('btn-open-add-customer');
+    const customerFormCard = document.getElementById('customer-form-card');
+    const customerCrudForm = document.getElementById('customer-crud-form');
+    const btnCancelCustomer = document.getElementById('btn-cancel-customer');
+    const adminCustomerTableBody = document.getElementById('admin-customer-table-body');
+    const customerFormTitle = document.getElementById('customer-form-title');
+
+    // Retrieve from Supabase or localStorage
+    async function loadCustomers() {
+        let supabaseUrl = '';
+        let supabaseKey = '';
+        
+        if (window.SUPABASE_CONFIG && window.SUPABASE_CONFIG.url && window.SUPABASE_CONFIG.url !== 'YOUR_SUPABASE_URL_HERE') {
+            supabaseUrl = window.SUPABASE_CONFIG.url;
+            supabaseKey = window.SUPABASE_CONFIG.anonKey;
+        } else {
+            supabaseUrl = localStorage.getItem('supabase_url') || '';
+            supabaseKey = localStorage.getItem('supabase_key') || '';
+        }
+
+        if (supabaseUrl && supabaseKey && window.supabase) {
+            try {
+                const client = window.supabase.createClient(supabaseUrl, supabaseKey);
+                const { data, error } = await client
+                    .from('customer_directory')
+                    .select('*');
+
+                if (!error && data && data.length > 0) {
+                    customers = data.map(item => ({
+                        id: item.id,
+                        name: item.name,
+                        phone: item.phone,
+                        address: item.address,
+                        idproof: item.idproof || '',
+                        remarks: item.remarks || ''
+                    }));
+                    renderCustomerTable();
+                    return;
+                }
+            } catch (e) {
+                console.error("Failed to sync customer directory from Supabase:", e);
+            }
+        }
+
+        // Fallback
+        customers = JSON.parse(localStorage.getItem('customer_directory'));
+        if (!customers || customers.length === 0) {
+            customers = defaultCustomers;
+            localStorage.setItem('customer_directory', JSON.stringify(customers));
+        }
+        renderCustomerTable();
+    }
+
+    async function saveCustomers() {
+        localStorage.setItem('customer_directory', JSON.stringify(customers));
+        renderCustomerTable();
+
+        let supabaseUrl = '';
+        let supabaseKey = '';
+        
+        if (window.SUPABASE_CONFIG && window.SUPABASE_CONFIG.url && window.SUPABASE_CONFIG.url !== 'YOUR_SUPABASE_URL_HERE') {
+            supabaseUrl = window.SUPABASE_CONFIG.url;
+            supabaseKey = window.SUPABASE_CONFIG.anonKey;
+        } else {
+            supabaseUrl = localStorage.getItem('supabase_url') || '';
+            supabaseKey = localStorage.getItem('supabase_key') || '';
+        }
+
+        if (supabaseUrl && supabaseKey && window.supabase) {
+            try {
+                const client = window.supabase.createClient(supabaseUrl, supabaseKey);
+                const { error } = await client
+                    .from('customer_directory')
+                    .upsert(customers, { onConflict: 'id' });
+                
+                if (error) throw error;
+            } catch (e) {
+                console.error("Failed to save customers to Supabase:", e);
+            }
+        }
+    }
+
+    async function deleteCustomerFromCloud(id) {
+        let supabaseUrl = '';
+        let supabaseKey = '';
+        
+        if (window.SUPABASE_CONFIG && window.SUPABASE_CONFIG.url && window.SUPABASE_CONFIG.url !== 'YOUR_SUPABASE_URL_HERE') {
+            supabaseUrl = window.SUPABASE_CONFIG.url;
+            supabaseKey = window.SUPABASE_CONFIG.anonKey;
+        } else {
+            supabaseUrl = localStorage.getItem('supabase_url') || '';
+            supabaseKey = localStorage.getItem('supabase_key') || '';
+        }
+
+        if (supabaseUrl && supabaseKey && window.supabase) {
+            try {
+                const client = window.supabase.createClient(supabaseUrl, supabaseKey);
+                await client
+                    .from('customer_directory')
+                    .delete()
+                    .eq('id', id);
+            } catch (e) {
+                console.error("Failed to delete customer from Supabase:", e);
+            }
+        }
+    }
+
+    // Render table
+    function renderCustomerTable() {
+        if (!adminCustomerTableBody) return;
+        adminCustomerTableBody.innerHTML = '';
+
+        const query = customerSearchInput ? customerSearchInput.value.toLowerCase().trim() : '';
+
+        const filtered = customers.filter(c => {
+            if (!query) return true;
+            return c.name.toLowerCase().includes(query) || 
+                   c.phone.toLowerCase().includes(query) || 
+                   c.address.toLowerCase().includes(query) ||
+                   c.remarks.toLowerCase().includes(query);
+        });
+
+        filtered.forEach(c => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>
+                    <div style="font-weight: 700; color: var(--text-primary);">${c.name}</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem; white-space: normal; max-width: 250px;">${c.address}</div>
+                </td>
+                <td style="vertical-align: middle;">
+                    <a href="tel:${c.phone}" style="color: var(--accent-gold); text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 0.3rem;">
+                        📞 ${c.phone}
+                    </a>
+                </td>
+                <td style="vertical-align: middle;">
+                    ${c.idproof ? `
+                        <a href="${c.idproof}" target="_blank" style="padding: 0.3rem 0.6rem; border-radius: 4px; background: var(--bg-tertiary); color: var(--text-primary); border: 1px solid var(--border-color); font-size: 0.75rem; text-decoration: none; display: inline-block;">
+                            📄 View ID Proof
+                        </a>
+                    ` : '<span style="font-size: 0.8rem; color: var(--text-muted);">None Uploaded</span>'}
+                </td>
+                <td style="vertical-align: middle; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${c.remarks || ''}">
+                    <span style="font-size: 0.85rem; color: var(--text-muted);">${c.remarks || '-'}</span>
+                </td>
+                <td style="vertical-align: middle;">
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button type="button" class="btn btn-edit-customer" data-id="${c.id}" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; background: var(--bg-tertiary); color: var(--text-primary); border: 1px solid var(--border-color); cursor: pointer;">Edit</button>
+                        <button type="button" class="btn btn-delete-customer" data-id="${c.id}" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; background: rgba(255, 69, 58, 0.15); color: #ff453a; border: 1px solid #ff453a; cursor: pointer;">Delete</button>
+                    </div>
+                </td>
+            `;
+            adminCustomerTableBody.appendChild(tr);
+        });
+
+        // Event listeners
+        adminCustomerTableBody.querySelectorAll('.btn-edit-customer').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const id = e.currentTarget.getAttribute('data-id');
+                const c = customers.find(item => item.id === id);
+                if (c) {
+                    document.getElementById('form-customer-id').value = c.id;
+                    document.getElementById('form-customer-name').value = c.name;
+                    document.getElementById('form-customer-phone').value = c.phone;
+                    document.getElementById('form-customer-address').value = c.address;
+                    document.getElementById('form-customer-idproof').value = c.idproof;
+                    document.getElementById('form-customer-remarks').value = c.remarks;
+
+                    customerFormTitle.textContent = 'Edit Customer Profile';
+                    customerFormCard.style.display = 'block';
+                    customerFormCard.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+
+        adminCustomerTableBody.querySelectorAll('.btn-delete-customer').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const id = e.currentTarget.getAttribute('data-id');
+                if (confirm('Are you sure you want to delete this customer profile?')) {
+                    customers = customers.filter(item => item.id !== id);
+                    saveCustomers();
+                    deleteCustomerFromCloud(id);
+                }
+            });
+        });
+    }
+
+    if (btnOpenAddCustomer) {
+        btnOpenAddCustomer.addEventListener('click', () => {
+            document.getElementById('form-customer-id').value = '';
+            customerCrudForm.reset();
+            customerFormTitle.textContent = 'Add New Customer Profile';
+            customerFormCard.style.display = 'block';
+            customerFormCard.scrollIntoView({ behavior: 'smooth' });
+        });
+    }
+
+    if (btnCancelCustomer) {
+        btnCancelCustomer.addEventListener('click', () => {
+            customerFormCard.style.display = 'none';
+        });
+    }
+
+    if (customerCrudForm) {
+        customerCrudForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const id = document.getElementById('form-customer-id').value;
+            const name = document.getElementById('form-customer-name').value.trim();
+            const phone = document.getElementById('form-customer-phone').value.trim();
+            const address = document.getElementById('form-customer-address').value.trim();
+            const idproof = document.getElementById('form-customer-idproof').value.trim();
+            const remarks = document.getElementById('form-customer-remarks').value.trim();
+
+            if (id) {
+                // Edit
+                const index = customers.findIndex(item => item.id === id);
+                if (index !== -1) {
+                    customers[index] = { id, name, phone, address, idproof, remarks };
+                }
+            } else {
+                // Add
+                const newId = `cust-${Date.now()}`;
+                customers.push({ id: newId, name, phone, address, idproof, remarks });
+            }
+
+            saveCustomers();
+            customerCrudForm.reset();
+            customerFormCard.style.display = 'none';
+            alert('Customer profile saved successfully!');
+        });
+    }
+
+    if (customerSearchInput) {
+        customerSearchInput.addEventListener('input', renderCustomerTable);
+    }
+
+    // Load initial directory
+    loadCustomers();
 }
 

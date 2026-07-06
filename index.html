@@ -154,6 +154,9 @@
                 <button class="nav-item" data-tab="item-predictor">
                     <span class="icon">🛋️</span> Furniture Item Predictor
                 </button>
+                <button class="nav-item" data-tab="customers">
+                    <span class="icon">👥</span> Customer Directory
+                </button>
             </nav>
             <!-- Theme Toggle Component & Logout -->
             <div class="theme-toggle-container" style="margin-top: auto; display: flex; flex-direction: column; gap: 0.8rem;">
@@ -589,6 +592,73 @@
                                 </tbody>
                             </table>
                         </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 6: Customer Directory -->
+            <section class="tab-content" id="tab-customers">
+                <div class="glass-card">
+                    <h2 class="card-title">👥 Customer Directory Database</h2>
+                    <p class="card-subtitle">Manage customer directory accounts, contact details, and uploaded verification IDs.</p>
+
+                    <div style="display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap; align-items: center;">
+                        <input type="text" id="customer-search-input" placeholder="🔍 Search customers by name, phone, or address..." style="flex: 1; min-width: 250px; padding: 0.8rem; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-tertiary); color: var(--text-primary); font-family: var(--font-body); font-size: 0.9rem;">
+                        <button type="button" class="btn btn-gold" id="btn-open-add-customer" style="padding: 0.8rem 1.5rem; display: flex; align-items: center; gap: 0.5rem;">+ Add New Customer</button>
+                    </div>
+
+                    <!-- ADD / EDIT CUSTOMER MODAL FORM -->
+                    <div id="customer-form-card" class="glass-card" style="display: none; margin-bottom: 2rem; background: var(--bg-tertiary);">
+                        <h4 id="customer-form-title" style="margin-bottom: 1.2rem; color: var(--accent-gold);">Add New Customer Profile</h4>
+                        <form id="customer-crud-form" class="calc-form">
+                            <input type="hidden" id="form-customer-id">
+                            <div class="form-row">
+                                <div class="input-group">
+                                    <label for="form-customer-name">Full Name</label>
+                                    <input type="text" id="form-customer-name" required placeholder="e.g. Rajesh Kumar" style="padding: 0.8rem;">
+                                </div>
+                                <div class="input-group">
+                                    <label for="form-customer-phone">Phone Number</label>
+                                    <input type="tel" id="form-customer-phone" required placeholder="e.g. +91 9876543210" style="padding: 0.8rem;">
+                                </div>
+                            </div>
+                            <div class="input-group" style="margin-bottom: 1.2rem;">
+                                <label for="form-customer-address">Address</label>
+                                <textarea id="form-customer-address" required placeholder="e.g. Flat 402, Sai Balaji Residency, Vijayawada" style="width: 100%; min-height: 80px; padding: 0.8rem; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-secondary); color: var(--text-primary); font-family: var(--font-body); font-size: 0.95rem; resize: vertical;"></textarea>
+                            </div>
+                            <div class="form-row">
+                                <div class="input-group">
+                                    <label for="form-customer-idproof">Upload ID Proof (Optional - Image URL / File Link)</label>
+                                    <input type="text" id="form-customer-idproof" placeholder="e.g. https://link-to-id-image.com" style="padding: 0.8rem;">
+                                </div>
+                                <div class="input-group">
+                                    <label for="form-customer-remarks">Internal Remarks</label>
+                                    <input type="text" id="form-customer-remarks" placeholder="e.g. High value buyer, prefers gold loans" style="padding: 0.8rem;">
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                                <button type="submit" class="btn btn-gold" id="btn-save-customer" style="padding: 0.8rem 1.8rem;">Save Profile</button>
+                                <button type="button" class="btn" id="btn-cancel-customer" style="background: var(--bg-secondary); color: var(--text-primary); padding: 0.8rem 1.5rem;">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- CUSTOMER LIST LISTING -->
+                    <div class="table-container" style="overflow-x: auto;">
+                        <table style="width: 100%;">
+                            <thead>
+                                <tr>
+                                    <th>Customer Details</th>
+                                    <th>Contact Info</th>
+                                    <th>Verification ID</th>
+                                    <th>Internal Remarks</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-customer-table-body">
+                                <!-- Dynamic list of customers -->
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </section>
