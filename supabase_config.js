@@ -2,6 +2,6 @@
 // Replace these placeholders with your actual Supabase Project credentials.
 
 window.SUPABASE_CONFIG = {
-    url: 'YOUR_SUPABASE_URL_HERE',
-    anonKey: 'YOUR_SUPABASE_ANON_KEY_HERE'
+    url: 'https://vfarpkixoxdtikxdydya.supabase.co',
+    anonKey: 'sb_publishable_h1Xzo-Agbl10VXCYCqsctQ_wOdZV2Uf'
 };
