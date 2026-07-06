@@ -48,7 +48,7 @@ function initGlobalAdminGate() {
     }
 
     loginBtn.addEventListener('click', () => {
-        if (passcodeInp.value === '1234') {
+        if (passcodeInp.value === '1004') {
             localStorage.setItem('furniture_admin_logged', 'true');
             passcodeInp.value = '';
             checkAuth();
