@@ -1227,7 +1227,6 @@ function initItemPricePredictor() {
         // Populate the modal list with all items
         catalog.forEach(item => {
             const isChecked = singleProductId ? (item.id === singleProductId) : true;
-            const defaultQty = singleProductId && item.id === singleProductId ? 1 : 0;
             
             const div = document.createElement('div');
             div.style.display = 'flex';
@@ -1253,7 +1252,129 @@ function initItemPricePredictor() {
             bulkItemsList.appendChild(div);
         });
 
+        // Trigger initial preview build
+        updatePrintPreview();
+        
+        // Attach change listeners to update preview live
+        const controls = [
+            document.getElementById('print-label-size'),
+            document.getElementById('print-custom-size-val'),
+            document.getElementById('print-label-gap'),
+            document.getElementById('print-show-mrp'),
+            document.getElementById('print-show-price'),
+            document.getElementById('print-show-border')
+        ];
+        
+        controls.forEach(ctrl => {
+            if (ctrl) {
+                ctrl.removeEventListener('change', updatePrintPreview);
+                ctrl.removeEventListener('input', updatePrintPreview);
+                ctrl.addEventListener('change', updatePrintPreview);
+                ctrl.addEventListener('input', updatePrintPreview);
+            }
+        });
+
+        // Toggle custom size entry visibility
+        const sizeSelect = document.getElementById('print-label-size');
+        const customSizeContainer = document.getElementById('custom-size-container');
+        if (sizeSelect && customSizeContainer) {
+            sizeSelect.addEventListener('change', () => {
+                customSizeContainer.style.display = sizeSelect.value === 'custom' ? 'flex' : 'none';
+            });
+            // Initial toggle check
+            customSizeContainer.style.display = sizeSelect.value === 'custom' ? 'flex' : 'none';
+        }
+
+        // Add listeners to item selections & quantities to update preview live
+        bulkItemsList.querySelectorAll('.print-select-item, .print-qty-item').forEach(inp => {
+            inp.addEventListener('input', updatePrintPreview);
+            inp.addEventListener('change', updatePrintPreview);
+        });
+
         if (bulkPrintModal) bulkPrintModal.style.display = 'flex';
+    }
+
+    // Function to calculate selected label parameters
+    function getPrintParams() {
+        const sizeSelect = document.getElementById('print-label-size');
+        let size = 150;
+        if (sizeSelect) {
+            if (sizeSelect.value === 'custom') {
+                size = parseInt(document.getElementById('print-custom-size-val').value) || 180;
+            } else {
+                size = parseInt(sizeSelect.value) || 150;
+            }
+        }
+        const gap = parseInt(document.getElementById('print-label-gap').value) || 0;
+        const showMRP = document.getElementById('print-show-mrp').checked;
+        const showPrice = document.getElementById('print-show-price').checked;
+        const showBorder = document.getElementById('print-show-border').checked;
+        
+        return { size, gap, showMRP, showPrice, showBorder };
+    }
+
+    // Live preview updates generator
+    function updatePrintPreview() {
+        const previewContainer = document.getElementById('print-preview-container');
+        if (!previewContainer) return;
+        
+        const { size, gap, showMRP, showPrice, showBorder } = getPrintParams();
+        const selectedItems = [];
+        
+        const rows = bulkItemsList.querySelectorAll('.print-select-item');
+        rows.forEach(checkbox => {
+            if (checkbox.checked) {
+                const pid = checkbox.getAttribute('data-id');
+                const qtyInput = bulkItemsList.querySelector(`.print-qty-item[data-id="${pid}"]`);
+                const qty = parseInt(qtyInput.value) || 1;
+                const item = catalog.find(p => p.id === pid);
+                if (item) selectedItems.push({ item, qty });
+            }
+        });
+
+        if (selectedItems.length === 0) {
+            previewContainer.innerHTML = '<div style="color: #888; text-align: center; padding: 2rem;">No items selected. Select items on the left to see preview.</div>';
+            return;
+        }
+
+        // Build HTML preview layout
+        previewContainer.innerHTML = '';
+        const gridDiv = document.createElement('div');
+        gridDiv.className = 'preview-grid-wrapper';
+        gridDiv.style.display = 'flex';
+        gridDiv.style.flexWrap = 'wrap';
+        gridDiv.style.gap = `${gap}px`;
+        gridDiv.style.justifyContent = 'flex-start';
+        gridDiv.style.background = '#fff';
+        gridDiv.style.padding = '0.5rem';
+        gridDiv.style.borderRadius = '4px';
+
+        selectedItems.forEach(task => {
+            for (let i = 0; i < task.qty; i++) {
+                const card = document.createElement('div');
+                card.style.background = '#fff';
+                card.style.color = '#000';
+                card.style.padding = '8px';
+                card.style.display = 'flex';
+                card.style.flexDirection = 'column';
+                card.style.alignItems = 'center';
+                card.style.justifyContent = 'center';
+                card.style.borderRadius = '4px';
+                card.style.width = `${size + 24}px`;
+                card.style.border = showBorder ? '1px dashed #ccc' : 'none';
+                
+                card.innerHTML = `
+                    <div style="font-size: 9px; font-weight: 800; text-transform: uppercase; margin-bottom: 2px; letter-spacing: 0.5px;">Sri Sai Balaji</div>
+                    <div class="preview-qr-box" style="width: ${size}px; height: ${size}px; display: flex; align-items: center; justify-content: center; background: #f0f0f0; font-size: 10px; color: #888; margin: 2px 0;">[QR Code]</div>
+                    <div style="font-size: 8px; font-family: monospace; font-weight: 700; margin: 2px 0;">CODE: ${task.item.id}</div>
+                    ${showMRP ? `<div style="font-size: 8px; color: #666; margin: 1px 0;">MRP: ₹${task.item.mrp.toLocaleString('en-IN')}</div>` : ''}
+                    ${showPrice ? `<div style="font-size: 9px; font-weight: 700; color: #000; margin: 1px 0;">Price: ₹${task.item.discountedPrice.toLocaleString('en-IN')}</div>` : ''}
+                `;
+                gridDiv.appendChild(card);
+            }
+        });
+
+        previewContainer.appendChild(gridDiv);
     }
 
     if (btnOpenBulkPrint) {
@@ -1273,10 +1394,7 @@ function initItemPricePredictor() {
         bulkPrintForm.addEventListener('submit', (e) => {
             e.preventDefault();
             
-            const selectedSize = parseInt(document.getElementById('print-label-size').value) || 150;
-            const showMRP = document.getElementById('print-show-mrp').checked;
-            const showPrice = document.getElementById('print-show-price').checked;
-            
+            const { size, gap, showMRP, showPrice, showBorder } = getPrintParams();
             const printTasks = [];
             const rows = bulkItemsList.querySelectorAll('.print-select-item');
             
@@ -1311,7 +1429,7 @@ function initItemPricePredictor() {
                 const customerURL = window.location.origin + '/scan.html?id=' + task.item.id;
                 for (let i = 0; i < task.qty; i++) {
                     labelsHtml += `
-                        <div class="label-card" style="width: ${selectedSize + 40}px;">
+                        <div class="label-card" style="width: ${size + 24}px; border: ${showBorder ? '1px dashed #ccc' : 'none'};">
                             <div class="shop-header">Sri Sai Balaji</div>
                             <div class="qr-placeholder" data-url="${customerURL}"></div>
                             <div class="code-id">CODE: ${task.item.id}</div>
@@ -1337,13 +1455,12 @@ function initItemPricePredictor() {
                         .print-grid {
                             display: flex;
                             flex-wrap: wrap;
-                            gap: 15px;
+                            gap: ${gap}px;
                             justify-content: flex-start;
                         }
                         .label-card {
-                            border: 1px dashed #ccc;
                             border-radius: 8px;
-                            padding: 10px;
+                            padding: 8px;
                             display: flex;
                             flex-direction: column;
                             align-items: center;
@@ -1353,32 +1470,34 @@ function initItemPricePredictor() {
                             page-break-inside: avoid;
                         }
                         .shop-header {
-                            font-size: 11px;
+                            font-size: 10px;
                             font-weight: 800;
-                            letter-spacing: 1px;
+                            letter-spacing: 0.5px;
                             text-transform: uppercase;
-                            margin-bottom: 4px;
+                            margin-bottom: 2px;
                             color: #000;
                         }
                         .code-id {
-                            font-size: 10px;
+                            font-size: 9px;
                             font-family: monospace;
                             font-weight: 700;
-                            margin: 3px 0;
+                            margin: 2px 0;
                         }
                         .price-line {
-                            font-size: 10px;
+                            font-size: 9px;
                             color: #555;
                             margin: 1px 0;
                         }
                         .price-line.highlight {
                             font-weight: 700;
                             color: #000;
-                            font-size: 11px;
+                            font-size: 10px;
                         }
                         @media print {
                             body { margin: 0; }
-                            .label-card { border: 1px solid #000; }
+                            .label-card {
+                                border: ${showBorder ? '1px dashed #000' : 'none'};
+                            }
                         }
                     </style>
                 </head>
@@ -1393,8 +1512,8 @@ function initItemPricePredictor() {
                                 const url = div.getAttribute('data-url');
                                 new QRCode(div, {
                                     text: url,
-                                    width: ${selectedSize},
-                                    height: ${selectedSize},
+                                    width: ${size},
+                                    height: ${size},
                                     correctLevel: QRCode.CorrectLevel.H
                                 });
                             });
