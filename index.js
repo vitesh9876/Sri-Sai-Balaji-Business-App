@@ -992,19 +992,7 @@ function initItemPricePredictor() {
     const loginGate = document.getElementById('admin-login-gate');
     const sidebarLogoutBtn = document.getElementById('sidebar-logout-btn');
 
-    if (gateLoginBtn) {
-        gateLoginBtn.addEventListener('click', () => {
-            const code = gatePasscodeInp.value;
-            if (code === '1004') {
-                isAdmin = true;
-                localStorage.setItem('furniture_admin_logged', 'true');
-                if (loginGate) loginGate.style.display = 'none';
-                updateAdminPanelVisibility();
-            } else {
-                alert('Invalid admin passcode!');
-            }
-        });
-    }
+
 
     if (sidebarLogoutBtn) {
         sidebarLogoutBtn.addEventListener('click', () => {
