@@ -16,6 +16,8 @@
     <!-- Supabase JS Client library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="index.css">
+    <!-- Favicon link -->
+    <link rel="icon" type="image/png" href="favicon.png">
 </head>
 <body>
     <!-- Full-screen Admin Login Gate -->
@@ -256,21 +258,7 @@
                     </div>
                 </div>
 
-                <div class="quick-admin-actions" style="margin-top: 2rem;">
-                    <h3>Cloud Database Configuration</h3>
-                    <p>Enter your Supabase database credentials to sync furniture inventory live to the cloud database:</p>
-                    <div class="form-row inline" style="flex-wrap: wrap; gap: 1rem;">
-                        <div class="input-group" style="flex: 1; min-width: 250px;">
-                            <label for="db-supabase-url">Supabase Project URL</label>
-                            <input type="text" id="db-supabase-url" placeholder="https://your-project.supabase.co" style="width: 100%;">
-                        </div>
-                        <div class="input-group" style="flex: 1; min-width: 250px;">
-                            <label for="db-supabase-key">Supabase Anon Public API Key</label>
-                            <input type="password" id="db-supabase-key" placeholder="eyJhbGciOiJIUzI1Ni..." style="width: 100%;">
-                        </div>
-                        <button class="btn btn-gold" id="btn-save-db-settings" style="margin-top: auto; padding: 0.8rem 1.5rem;">Link Database</button>
-                    </div>
-                </div>
+
             </section>
 
             <!-- TAB 2: Loan Interest Calculator -->
